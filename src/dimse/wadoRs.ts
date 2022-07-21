@@ -56,7 +56,7 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     filename = sopInstanceUid
   }
 
-  const json = deepmerge.all(await doFind(QUERY_LEVEL.IMAGE, { StudyInstanceUID: studyInstanceUid }), { arrayMerge: combineMerge}) as QidoResponse[];
+  const json = deepmerge.all(await doFind(QUERY_LEVEL.IMAGE, { StudyInstanceUID: studyInstanceUid, SeriesInstanceUID: seriesInstanceUid ?? '', SOPInstanceUID: sopInstanceUid ?? '', includefield: "0020000E" }), { arrayMerge: combineMerge}) as QidoResponse[];
   const foundPromises = await Promise.all(json.map(async (instance) => {
     if (instance["00080018"]) {
       const id = instance["00080018"].Value[0]
@@ -73,7 +73,6 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     }
     return true
   }))
-
   const useCache = foundPromises.reduce((prev, curr) => prev && curr, true)
 
   if (!useCache) {
@@ -89,18 +88,22 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     if (isDir) {
       const files = await fs.readdir(pathname)
       buffers = await Promise.all(files.map(async (file) => {
-        const filePath = path.join(pathname, file)
-        if (!useCache) {
-          try {
-            await compressFile(filePath, studyPath);
+        const instance = json.find((i) => i["00080018"]?.Value?.[0] === file)
+        if (instance) {
+          const filePath = path.join(pathname, file)
+          if (!useCache) {
+            try {
+              await compressFile(filePath, studyPath);
+            }
+            catch (e) {
+              logger.error(`failed to compress ${pathname}`);
+              throw e;
+            }
           }
-          catch (e) {
-            logger.error(`failed to compress ${pathname}`);
-            throw e;
-          }
+          return addFileToBuffer(pathname, file)
         }
-        return addFileToBuffer(pathname, file)
       }))
+      buffers.filter((t) => !!t)
     }
     else {
       if (!useCache) {
@@ -112,8 +115,10 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     const boundary = studyInstanceUid
     const buffArray: Buffer[] = []
     buffers.forEach(async (buff) => {
-      buffArray.push(Buffer.from(`${term}--${boundary}${term}`));
-      buffArray.push(buff);
+      if (buff) {
+        buffArray.push(Buffer.from(`${term}--${boundary}${term}`));
+        buffArray.push(buff);
+      }
     })
     buffArray.push(Buffer.from(`${term}--${boundary}--${term}`))
 
