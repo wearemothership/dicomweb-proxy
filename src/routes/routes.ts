@@ -178,6 +178,27 @@ module.exports = function (server: FastifyInstance, opts: unknown, done: () => v
     }
   });
 
+    //------------------------------------------------------------------
+
+    server.get<{
+      Params: IParamsImage;
+      Querystring: QueryParams;
+    }>('/rs/studies/:studyInstanceUid/series/:seriesInstanceUid/instances/:sopInstanceUid/metadata', async (req, reply) => {
+      const { studyInstanceUid, seriesInstanceUid, sopInstanceUid } = req.params;
+      const { query } = req;
+      query.StudyInstanceUID = studyInstanceUid;
+      query.SeriesInstanceUID = seriesInstanceUid;
+      query.SOPInstanceUID = sopInstanceUid;
+  
+      try {
+        const rsp = await fetchMeta(query, studyInstanceUid, seriesInstanceUid);
+        reply.send(rsp);
+      } catch (error) {
+        logger.error(error);
+        reply.send(500);
+      }
+    });
+
   //------------------------------------------------------------------
 
   server.get<{

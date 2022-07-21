@@ -6,9 +6,15 @@ import { doWadoUri } from './dimse/wadoUri';
 import { LoggerSingleton } from './utils/logger';
 import { doWadoRs } from './dimse/wadoRs';
 import socketIOStream from 'socket.io-stream';
+import { storeData } from './dimse/storeData';
 
 const websocketUrl = config.get(ConfParams.WEBSOCKET_URL) as string;
 const logger = LoggerSingleton.Instance;
+
+type StowInfo = {
+  uuid: string,
+  contentType: string
+}
 
 export const socket = io(websocketUrl, {
   reconnection: true,
@@ -17,6 +23,8 @@ export const socket = io(websocketUrl, {
   auth: {
     token: config.get(ConfParams.WEBSOCKET_TOKEN),
   },
+  transports: ["websocket"],
+  secure: true
 });
 
 socket.on('connect', () => {
@@ -67,6 +75,22 @@ socket.on('wado-request', async (data) => {
     writeBuffer()
   }
 });
+
+socketIOStream(socket).on("stow-request", async (stream: any, info: StowInfo) => new Promise((resolve) => {
+  logger.info('websocket STOW-RS request received');
+  const { uuid, contentType } = info;
+  const buff: Buffer[] = []
+  stream.on("data", (data: Buffer) => {
+    buff.push(data)
+  });
+
+  stream.on("end", async () => {
+    const b = Buffer.concat(buff);
+    console.log(b.length)
+    await storeData(b, contentType)
+    socket.emit(uuid, "DONE")
+  })
+}))
 
 socket.on('wadouri-request', async (data) => {
   logger.info('websocket wadouri request received, fetching metadata now...');
