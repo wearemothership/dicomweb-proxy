@@ -34,6 +34,7 @@
     "@fastify/static": "^6.4.0",
     "@iwharris/dicom-data-dictionary": "^1.26.0",
     "config": "^3.3.7",
+    "dcmjs": "^0.24.4",
     "deepmerge": "^4.2.2",
     "dicom-dimse-native": "^2.4.0",
     "dicom-parser": "^1.8.13",
@@ -41,8 +42,9 @@
     "shelljs": "^0.8.5",
     "simple-node-logger": "^21.8.12",
     "socket.io-client": "^4.5.1",
-    "socket.io-stream": "^0.9.1",
-    "throat": "^6.0.1"
+    "socket.io-stream": "file:../socket.io-stream/",
+    "throat": "^6.0.1",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/config": "^0.0.41",
@@ -53,6 +55,7 @@
     "@types/prettier": "^2.6.3",
     "@types/shelljs": "^0.8.11",
     "@types/socket.io-client": "^3.0.0",
+    "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
     "eslint": "^8.17.0",
