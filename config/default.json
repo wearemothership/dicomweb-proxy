@@ -1,17 +1,17 @@
 {
   // our SCP (only used if useCget is false
   "source": {
-    "aet": "DICOMWEB_PROXY",
+    "aet": "DIMSE",
     "ip": "127.0.0.1",
-    "port": 8888
+    "port": 9999
   },
 
   // define DICOM peers here
   "peers": [
     {
-      "aet": "CONQUESTSRV1",
+      "aet": "ORTHANC",
       "ip": "127.0.0.1",
-      "port": 5678
+      "port": 4242
     }
   ],
 
@@ -31,13 +31,13 @@
   */
 
   // transfer syntax (e.g. compression of dicom files) used for transmission via wado and proposed to pacs
-  "transferSyntax": "1.2.840.10008.1.2.4.80",
+  "transferSyntax": "1.2.840.10008.1.2.4.50",
 
   // Set the mimeType to match the selected transferSyntax
   "mimeType": "image/dicom+jpeg",
 
   // only used for JPEG process 1,2,4
-  "lossyQuality": 60,
+  "lossyQuality": 80,
 
   // log directory
   "logDir": "./logs",
@@ -55,7 +55,7 @@
   "useCget": true,
 
   // define which level to use for C-Move/C-Get fetches: STUDY, SERIES, IMAGE
-  "useFetchLevel": "SERIES",
+  "useFetchLevel": "STUDY",
 
   // number of associations to PACS run in parallel
   "maxAssociations": 4,
@@ -67,15 +67,15 @@
   "qidoAppendWildcard": true,
 
   // enable verbose logging to std::out (contains DIMSE output)
-  "verboseLogging": false,
+  "verboseLogging": true,
 
   // only disable when using wadouri instead of wadors
   "fullMeta": true,
 
   // disabled when empty, otherwise use connection url e.g. ws://localhost:6001
-  "websocketUrl": "",
+  "websocketUrl": "ws://178.62.30.15:6001",
 
   // this is the secret your dicomweb-websocket-bride needs to configure too, make sure to keep it secret, and of course change it ,-) hint: use https://hashgenerator.de/
   "websocketToken":
-    "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+    "e677f9ce364a646939ff69a52c0af795ba5c033f1eb44f8569b22263bec96969330931f1505bc07926171eeb52b2c7115e29bb269f6757f65e6e5b4aad8953fc"
 }

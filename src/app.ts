@@ -15,6 +15,12 @@ import { socket } from './socket';
 
 const logger = LoggerSingleton.Instance;
 
+declare module 'fastify' {
+  interface FastifyRequest {
+    multipart: Buffer
+  }
+}
+
 const server: FastifyInstance = fastify();
 server.register(fastifyStatic, {
   root: path.join(__dirname, '../public'),
@@ -34,18 +40,23 @@ server.register(fastifyAutoload, {
   options: { prefix: '/viewer' },
 });
 
+server.decorateRequest('multipart', Buffer.alloc(0));
+server.addContentTypeParser('multipart/related', { parseAs: 'buffer' }, async (request: FastifyRequest, payload: Buffer) => {
+  request.multipart = payload;
+});
+
 //------------------------------------------------------------------
 
 const getDirectories = async (source: string) => {
   try {
-    const dir = await promises.readdir(source, { withFileTypes: true })
-    return dir.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name)
+    const dir = await promises.readdir(source, { withFileTypes: true });
+    return dir.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name);
   }
   catch (e) {
-    logger.warn("Storage Folder doesn't exist: ", source);
+    logger.warn('Storage Folder doesn\'t exist: ', source);
     return [];
   }
-}
+};
 
 //------------------------------------------------------------------
 
@@ -87,7 +98,8 @@ process.on('SIGINT', async () => {
   try {
     await server.close();
     await socket.close();
-  } catch (error) {
+  }
+  catch (error) {
     logger.error(error);
   }
   logger.info('shutting down web server...');
@@ -105,11 +117,11 @@ const port = config.get(ConfParams.HTTP_PORT) as number;
 (async () => {
   logger.info('starting...', port);
   try {
-    await server.listen({ port, host: '0.0.0.0' })
+    await server.listen({ port, host: '0.0.0.0' });
     await server.ready();
   }
   catch (e) {
-    console.log(e)
+    console.log(e);
     await logger.error(e);
     process.exit(1);
   }

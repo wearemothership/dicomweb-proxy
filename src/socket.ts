@@ -23,7 +23,7 @@ export const socket = io(websocketUrl, {
   auth: {
     token: config.get(ConfParams.WEBSOCKET_TOKEN),
   },
-  transports: ["websocket"],
+  transports: ['websocket'],
   secure: true
 });
 
@@ -54,43 +54,47 @@ socket.on('wado-request', async (data) => {
     const { contentType, buffer } = await doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanceUid });
     logger.info('sending websocket response stream');
     const stream = socketIOStream.createStream();
-    socketIOStream(socket).emit(data.uuid, stream, { contentType: contentType })
+    socketIOStream(socket).emit(data.uuid, stream, { contentType: contentType });
     let offset = 0;
-    const chunkSize = 512*1024 // 512kb
+    const chunkSize = 512*1024; // 512kb
     const writeBuffer = () => {
       let ok = true;
       do {
-        const b = Buffer.alloc(chunkSize)
-        buffer.copy(b, 0, offset, offset + chunkSize)
-        ok = stream.write(b)
-        offset += chunkSize
-      } while (offset < buffer.length && ok)
+        const b = Buffer.alloc(chunkSize);
+        buffer.copy(b, 0, offset, offset + chunkSize);
+        ok = stream.write(b);
+        offset += chunkSize;
+      } while (offset < buffer.length && ok);
       if (offset < buffer.length) {
-        stream.once("drain", writeBuffer)
+        stream.once('drain', writeBuffer);
       }
       else {
-        stream.end()
+        stream.end();
       }
-    }
-    writeBuffer()
+    };
+    writeBuffer();
   }
 });
 
-socketIOStream(socket).on("stow-request", async (stream: any, info: StowInfo) => new Promise((resolve) => {
+socketIOStream(socket).on('stow-request', async (stream: any, info: StowInfo) => new Promise((resolve) => {
   logger.info('websocket STOW-RS request received');
   const { uuid, contentType } = info;
-  const buff: Buffer[] = []
-  stream.on("data", (data: Buffer) => {
-    buff.push(data)
+  const buff: Buffer[] = [];
+  stream.on('data', (data: Buffer) => {
+    buff.push(data);
   });
 
-  stream.on("end", async () => {
-    const b = Buffer.concat(buff);
-    console.log(b.length)
-    await storeData(b, contentType)
-    socket.emit(uuid, "DONE")
-  })
-}))
+  stream.on('end', async () => {
+    try {
+      const b = Buffer.concat(buff);
+      const result = await storeData(b, contentType);
+      socket.emit(uuid, { success: true, message: result.message });
+    }
+    catch (e) {
+      socket.emit(uuid, { success: false, message: (e as Error).message });
+    }
+  });
+}));
 
 socket.on('wadouri-request', async (data) => {
   logger.info('websocket wadouri request received, fetching metadata now...');
@@ -105,7 +109,8 @@ socket.on('wadouri-request', async (data) => {
         sopInstanceUid: sopInstanceUid ?? objectUID
       });
       socket.emit(data.uuid, rsp);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(error);
       socket.emit(data.uuid, error);
     }
