@@ -30,7 +30,8 @@ export async function doWadoUri({ studyInstanceUid, seriesInstanceUid, sopInstan
   if (!exists) {
     try {
       await waitOrFetchData(studyInstanceUid, seriesInstanceUid, sopInstanceUid, level);
-    } catch (err) {
+    }
+    catch (err) {
       logger.error(`fetch failed for study: ${studyInstanceUid}`);
       throw err;
     }
@@ -45,7 +46,8 @@ export async function doWadoUri({ studyInstanceUid, seriesInstanceUid, sopInstan
 
   try {
     await compressFile(pathname, studyPath);
-  } catch (error) {
+  }
+  catch (error) {
     logger.error(error);
     const msg = `failed to compress ${pathname}`;
     throw msg;
@@ -58,7 +60,8 @@ export async function doWadoUri({ studyInstanceUid, seriesInstanceUid, sopInstan
       contentType: 'application/dicom',
       buffer: await fsPromise.readFile(pathname),
     };
-  } catch (error) {
+  }
+  catch (error) {
     logger.error(error);
     const msg = `failed to read ${pathname}`;
     throw msg;

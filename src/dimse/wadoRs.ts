@@ -7,7 +7,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { QUERY_LEVEL } from './querLevel';
 import deepmerge from 'deepmerge';
-import combineMerge from "../utils/combineMerge"
+import combineMerge from '../utils/combineMerge';
 
 type WadoRsArgs = {
   studyInstanceUid: string;
@@ -28,9 +28,9 @@ type QidoResponse = {
 const term = '\r\n';
 
 async function addFileToBuffer(pathname: string, filename: string): Promise<Buffer> {
-  const filepath = path.join(pathname, filename)
+  const filepath = path.join(pathname, filename);
   const data = await fs.readFile(filepath);
-  const contentId = filename
+  const contentId = filename;
 
   const buffArray: Buffer[] = [];
   buffArray.push(Buffer.from(`Content-Location:localhost${term}`));
@@ -38,59 +38,59 @@ async function addFileToBuffer(pathname: string, filename: string): Promise<Buff
   buffArray.push(Buffer.from(`Content-Type:${config.get(ConfParams.MIMETYPE)};transfer-syntax:${config.get(ConfParams.XTRANSFER)}${term}`));
   buffArray.push(Buffer.from(term));
   buffArray.push(data);
-  return Buffer.concat(buffArray)
+  return Buffer.concat(buffArray);
 }
 
 export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanceUid }: WadoRsArgs): Promise<WadoRsResponse> {
   const logger = LoggerSingleton.Instance;
   const storagePath = config.get(ConfParams.STORAGE_PATH) as string;
-  let queryLevel = QUERY_LEVEL.STUDY
+  let queryLevel = QUERY_LEVEL.STUDY;
   const studyPath = path.join(storagePath, studyInstanceUid);
   const pathname = studyPath;
-  let filename = ''
+  let filename = '';
   if (seriesInstanceUid) {
-    queryLevel = QUERY_LEVEL.SERIES
+    queryLevel = QUERY_LEVEL.SERIES;
   }
   if (sopInstanceUid) {
-    queryLevel = QUERY_LEVEL.IMAGE
-    filename = sopInstanceUid
+    queryLevel = QUERY_LEVEL.IMAGE;
+    filename = sopInstanceUid;
   }
 
-  const json = deepmerge.all(await doFind(QUERY_LEVEL.IMAGE, { StudyInstanceUID: studyInstanceUid, SeriesInstanceUID: seriesInstanceUid ?? '', SOPInstanceUID: sopInstanceUid ?? '', includefield: "0020000E" }), { arrayMerge: combineMerge}) as QidoResponse[];
+  const json = deepmerge.all(await doFind(QUERY_LEVEL.IMAGE, { StudyInstanceUID: studyInstanceUid, SeriesInstanceUID: seriesInstanceUid ?? '', SOPInstanceUID: sopInstanceUid ?? '', includefield: '0020000E' }), { arrayMerge: combineMerge}) as QidoResponse[];
   const foundPromises = await Promise.all(json.map(async (instance) => {
-    if (instance["00080018"]) {
-      const id = instance["00080018"].Value[0]
+    if (instance['00080018']) {
+      const id = instance['00080018'].Value[0];
       try {
-        const stat = await fs.stat(path.join(studyPath, id))
+        const stat = await fs.stat(path.join(studyPath, id));
         if (stat) {
-          return true
+          return true;
         }
-        return false
+        return false;
       }
       catch (e) {
-        return false
+        return false;
       }
     }
-    return true
-  }))
-  const useCache = foundPromises.reduce((prev, curr) => prev && curr, true)
+    return true;
+  }));
+  const useCache = foundPromises.reduce((prev, curr) => prev && curr, true);
 
   if (!useCache) {
     logger.info(`fetching ${pathname}`);
     await waitOrFetchData(studyInstanceUid, seriesInstanceUid ?? '', sopInstanceUid ?? '', queryLevel);
   }
 
-  let buffers
+  let buffers;
 
   try {
-    const stat = await fs.stat(pathname)
-    const isDir = await stat.isDirectory()
+    const stat = await fs.stat(pathname);
+    const isDir = await stat.isDirectory();
     if (isDir) {
-      const files = await fs.readdir(pathname)
+      const files = await fs.readdir(pathname);
       buffers = await Promise.all(files.map(async (file) => {
-        const instance = json.find((i) => i["00080018"]?.Value?.[0] === file)
+        const instance = json.find((i) => i['00080018']?.Value?.[0] === file);
         if (instance) {
-          const filePath = path.join(pathname, file)
+          const filePath = path.join(pathname, file);
           if (!useCache) {
             try {
               await compressFile(filePath, studyPath);
@@ -100,27 +100,27 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
               throw e;
             }
           }
-          return addFileToBuffer(pathname, file)
+          return addFileToBuffer(pathname, file);
         }
-      }))
-      buffers.filter((t) => !!t)
+      }));
+      buffers.filter((t) => !!t);
     }
     else {
       if (!useCache) {
         await compressFile(pathname, studyPath);
       }
       
-      buffers = [await addFileToBuffer(pathname, filename)]
+      buffers = [await addFileToBuffer(pathname, filename)];
     }
-    const boundary = studyInstanceUid
-    const buffArray: Buffer[] = []
+    const boundary = studyInstanceUid;
+    const buffArray: Buffer[] = [];
     buffers.forEach(async (buff) => {
       if (buff) {
         buffArray.push(Buffer.from(`${term}--${boundary}${term}`));
         buffArray.push(buff);
       }
-    })
-    buffArray.push(Buffer.from(`${term}--${boundary}--${term}`))
+    });
+    buffArray.push(Buffer.from(`${term}--${boundary}--${term}`));
 
     const contentType = `multipart/related;type='application/octet-stream';boundary='${boundary}'`;
     return Promise.resolve({
@@ -128,7 +128,8 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
       buffer: Buffer.concat(buffArray),
     });
 
-  } catch (error) {
+  }
+  catch (error) {
     logger.error(`failed to process ${pathname}`);
     throw error;
   }

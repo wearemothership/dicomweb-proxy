@@ -102,21 +102,26 @@ export async function sendCFindRequest(level: QUERY_LEVEL, target: DicomNode, qu
             const container = JSON.parse(json.container);
             if (container) {
               resolve(container.slice(offset));
-            } else {
+            }
+            else {
               resolve([]);
             }
-          } else if (json.code === 1) {
+          }
+          else if (json.code === 1) {
             logger.info('query is pending...');
-          } else {
+          }
+          else {
             logger.error(`c-find failure: ${json.message}`);
             resolve([]);
           }
-        } catch (error) {
+        }
+        catch (error) {
           logger.error(error);
           logger.error(result);
           resolve([]);
         }
-      } else {
+      }
+      else {
         logger.error('invalid result received');
         resolve([]);
       }
