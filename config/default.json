@@ -1,17 +1,17 @@
 {
   // our SCP (only used if useCget is false
   "source": {
-    "aet": "DIMSE",
+    "aet": "DICOMWEB_PROXY",
     "ip": "127.0.0.1",
-    "port": 9999
+    "port": 8888
   },
 
   // define DICOM peers here
   "peers": [
     {
-      "aet": "ORTHANC",
+      "aet": "CONQUESTSRV1",
       "ip": "127.0.0.1",
-      "port": 4242
+      "port": 5678
     }
   ],
 
@@ -31,51 +31,45 @@
   */
 
   // transfer syntax (e.g. compression of dicom files) used for transmission via wado and proposed to pacs
-  "transferSyntax": "1.2.840.10008.1.2.4.50",
+  "transferSyntax": "1.2.840.10008.1.2.4.80",
 
   // Set the mimeType to match the selected transferSyntax
   "mimeType": "image/dicom+jpeg",
 
   // only used for JPEG process 1,2,4
-  "lossyQuality": 80,
+  "lossyQuality": 60,
 
   // log directory
   "logDir": "./logs",
-
   // cache directory
   "storagePath": "./data",
-
   // keep cache alive for how long after storage or -1 to disable
   "cacheRetentionMinutes": 60,
-
   // webserver port
   "webserverPort": 5000,
-
   // target PACS supports C-Get (if flase use C-Move instead)
   "useCget": true,
 
   // define which level to use for C-Move/C-Get fetches: STUDY, SERIES, IMAGE
-  "useFetchLevel": "STUDY",
+  "useFetchLevel": "SERIES",
 
   // number of associations to PACS run in parallel
   "maxAssociations": 4,
-
   // do not issue c-find if search contains less characters
   "qidoMinChars": 0,
-
   // auto append * for patient name query
   "qidoAppendWildcard": true,
 
   // enable verbose logging to std::out (contains DIMSE output)
-  "verboseLogging": true,
+  "verboseLogging": false,
 
   // only disable when using wadouri instead of wadors
   "fullMeta": true,
 
   // disabled when empty, otherwise use connection url e.g. ws://localhost:6001
-  "websocketUrl": "ws://178.62.30.15:6001",
+  "websocketUrl": "",
 
   // this is the secret your dicomweb-websocket-bride needs to configure too, make sure to keep it secret, and of course change it ,-) hint: use https://hashgenerator.de/
   "websocketToken":
-    "e677f9ce364a646939ff69a52c0af795ba5c033f1eb44f8569b22263bec96969330931f1505bc07926171eeb52b2c7115e29bb269f6757f65e6e5b4aad8953fc"
+    "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
 }
