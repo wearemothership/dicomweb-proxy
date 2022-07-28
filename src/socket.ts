@@ -87,7 +87,7 @@ socket.on('wado-request', async (data) => {
   }
 });
 
-socketIOStream(socket).on('stow-request', async (stream: any, info: StowInfo) => new Promise((resolve) => {
+socketIOStream(socket).on('stow-request', async (stream: any, info: StowInfo): Promise<void> => new Promise((resolve) => {
   logger.info('websocket STOW-RS request received');
   const { uuid, contentType } = info;
   const buff: Buffer[] = [];
@@ -104,6 +104,7 @@ socketIOStream(socket).on('stow-request', async (stream: any, info: StowInfo) =>
     catch (e) {
       socket.emit(uuid, { success: false, message: (e as Error).message });
     }
+    return resolve();
   });
 }));
 
