@@ -20,16 +20,19 @@ export async function compressFile(inputFile: string, outputDirectory: string, t
           const json = JSON.parse(result);
           if (json.code === 0) {
             resolve(true);
-          } else {
+          }
+          else {
             logger.error(`recompression failure (${inputFile}): ${json.message}`);
             reject();
           }
-        } catch (error) {
+        }
+        catch (error) {
           logger.error(error);
           logger.error(result);
           reject();
         }
-      } else {
+      }
+      else {
         logger.error('invalid result received');
         reject();
       }
