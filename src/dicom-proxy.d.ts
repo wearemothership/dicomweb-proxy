@@ -1,3 +1,1 @@
-declare module 'socket.io-stream';
-
-declare module 'dcmjs';
+declare module '@wearemothership/socket.io-stream';
