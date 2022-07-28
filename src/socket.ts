@@ -34,12 +34,17 @@ socket.on('connect', () => {
 socket.on('qido-request', async (data) => {
   logger.info('websocket QIDO request received, fetching metadata now...');
   const { level, query }: { level: string; query: Record<string, string> } = data;
-
+  
   if (data) {
-    const lvl = stringToQueryLevel(level);
-    const json = await doFind(lvl, query);
-    logger.info('sending websocket response');
-    socket.emit(data.uuid, json);
+    try {
+      const lvl = stringToQueryLevel(level);
+      const json = await doFind(lvl, query);
+      logger.info('sending websocket response');
+      socket.emit(data.uuid, json);
+    }
+    catch (e) {
+      socket.emit(data.uuid, e);
+    }
   }
 });
 
@@ -51,28 +56,34 @@ socket.on('wado-request', async (data) => {
   } = query;
 
   if (data) {
-    const { contentType, buffer } = await doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanceUid });
-    logger.info('sending websocket response stream');
-    const stream = socketIOStream.createStream();
-    socketIOStream(socket).emit(data.uuid, stream, { contentType: contentType });
-    let offset = 0;
-    const chunkSize = 512*1024; // 512kb
-    const writeBuffer = () => {
-      let ok = true;
-      do {
-        const b = Buffer.alloc(chunkSize);
-        buffer.copy(b, 0, offset, offset + chunkSize);
-        ok = stream.write(b);
-        offset += chunkSize;
-      } while (offset < buffer.length && ok);
-      if (offset < buffer.length) {
-        stream.once('drain', writeBuffer);
-      }
-      else {
-        stream.end();
-      }
-    };
-    writeBuffer();
+    try {
+      const { contentType, buffer } = await doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanceUid });
+      logger.info('sending websocket response stream');
+      const stream = socketIOStream.createStream();
+      socketIOStream(socket).emit(data.uuid, stream, { contentType: contentType });
+      let offset = 0;
+      const chunkSize = 512*1024; // 512kb
+      const writeBuffer = () => {
+        let ok = true;
+        do {
+          const b = Buffer.alloc(chunkSize);
+          buffer.copy(b, 0, offset, offset + chunkSize);
+          ok = stream.write(b);
+          offset += chunkSize;
+        } while (offset < buffer.length && ok);
+        if (offset < buffer.length) {
+          stream.once('drain', writeBuffer);
+        }
+        else {
+          stream.end();
+        }
+      };
+      writeBuffer();
+    }
+    catch (e) {
+      logger.error('Emitting error', e);
+      socket.emit(data.uuid, e);
+    }
   }
 });
 
