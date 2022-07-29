@@ -19,8 +19,7 @@ function splitMultipart (buffer: Buffer, boundaryId: string): Buffer[] {
   let offset = 0;
   const tag = Buffer.from(`${EOL}--${boundaryId}${EOL}`);
   let ind = buffer.indexOf(tag);
-  console.log('BE', ind);
-  const splits = [];
+  const splits: Buffer[] = [];
   while (ind >= 0) {
     const len = ind - offset;
     const b = Buffer.alloc(len);
@@ -28,7 +27,6 @@ function splitMultipart (buffer: Buffer, boundaryId: string): Buffer[] {
     splits.push(b);
     offset = ind + 1;
     ind = buffer.indexOf(tag, offset);
-    console.log('IN', ind);
   }
   return splits.filter((s) => s.includes(Buffer.from('Content-ID')));
 }

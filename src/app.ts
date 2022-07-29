@@ -81,7 +81,7 @@ const port = config.get(ConfParams.HTTP_PORT) as number;
     await server.ready();
   }
   catch (e) {
-    console.log(e);
+    console.error(e);
     await logger.error(e);
     process.exit(1);
   }
