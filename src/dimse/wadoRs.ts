@@ -30,14 +30,12 @@ const term = '\r\n';
 async function addFileToBuffer(pathname: string, filename: string): Promise<Buffer> {
   const filepath = path.join(pathname, filename);
   const data = await fs.readFile(filepath);
-  const contentId = filename;
 
   const buffArray: Buffer[] = [];
-  buffArray.push(Buffer.from(`Content-Location:localhost${term}`));
-  buffArray.push(Buffer.from(`Content-ID:${contentId}${term}`));
   buffArray.push(Buffer.from(`Content-Type:${config.get(ConfParams.MIMETYPE)};transfer-syntax:${config.get(ConfParams.XTRANSFER)}${term}`));
   buffArray.push(Buffer.from(term));
   buffArray.push(data);
+  buffArray.push(Buffer.from(term));
   return Buffer.concat(buffArray);
 }
 
@@ -128,9 +126,9 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
         buffArray.push(buff);
       }
     });
-    buffArray.push(Buffer.from(`${term}--${boundary}${term}`));
+    buffArray.push(Buffer.from(`${term}--${boundary}--${term}`));
 
-    const contentType = `multipart/related;type='application/octet-stream';boundary='${boundary}'`;
+    const contentType = `multipart/related;type='application/octet-stream';boundary=${boundary}`;
     return Promise.resolve({
       contentType,
       buffer: Buffer.concat(buffArray),
