@@ -16,24 +16,36 @@ const dataSplitter = `${EOL}${EOL}`;
 const transferSyntax = '1.2.840.10008.1.2.4.50';
 
 function splitMultipart (buffer: Buffer, boundaryId: string): Buffer[] {
-  let offset = 0;
-  const tag = Buffer.from(`${EOL}--${boundaryId}${EOL}`);
-  let ind = buffer.indexOf(tag);
-  const splits: Buffer[] = [];
-  while (ind >= 0) {
-    const len = ind - offset;
-    const b = Buffer.alloc(len);
-    buffer.copy(b, 0, offset, ind);
-    splits.push(b);
-    offset = ind + 1;
-    ind = buffer.indexOf(tag, offset);
+  const startTag = `--${boundaryId}${EOL}`;
+  const tag = `${EOL}--${boundaryId}${EOL}`;
+  const endTag = `${EOL}--${boundaryId}--${EOL}`;
+  let offset = buffer.indexOf(startTag);
+  let ind = buffer.indexOf(tag, 1);
+  if (ind < 0) {
+    ind = buffer.indexOf(endTag, 1);
   }
-  return splits.filter((s) => s.includes(Buffer.from('Content-ID')));
+
+  const splits: Buffer[] = [];
+  while (ind > 0) {
+    const len = ind - offset;
+    if (len > 0) {
+      const b = Buffer.alloc(len + 1);
+      buffer.copy(b, 0, offset, ind);
+      splits.push(b);
+    }
+    offset = ind + tag.length;
+    ind = buffer.indexOf(tag, offset);
+    if (ind < 0) {
+      ind = buffer.indexOf(endTag, offset);
+    }
+  }
+
+  return splits;
 }
 
 async function handleStowRequest (multipartData: Buffer, contentType: string) {
   if (contentType) {
-    const matches = contentType.match(/boundary='(.*)'/i);
+    const matches = contentType.match(/boundary=(.*)/i);
     if (matches) {
       const fragments = splitMultipart(multipartData, matches[1]);
       return fragments;
@@ -47,9 +59,8 @@ async function handleStowRequest (multipartData: Buffer, contentType: string) {
 
 async function getImagePixelData(fileBuffer: Buffer) {
   const ind = fileBuffer.indexOf(dataSplitter) + dataSplitter.length;
-  const len = fileBuffer.length - ind;
-  const newBuffer = Buffer.alloc(len);
-  fileBuffer.copy(newBuffer, 0, ind, fileBuffer.length - EOL.length);
+  const newBuffer = Buffer.alloc(fileBuffer.length - (ind + 1));
+  fileBuffer.copy(newBuffer, 0, ind, fileBuffer.length);
   return newBuffer;
 }
 
