@@ -122,11 +122,11 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     buffers = buffers.filter((b: Buffer | undefined) => !!b);
     buffers.forEach(async (buff) => {
       if (buff) {
-        buffArray.push(Buffer.from(`${term}--${boundary}${term}`));
+        buffArray.push(Buffer.from(`--${boundary}${term}`));
         buffArray.push(buff);
       }
     });
-    buffArray.push(Buffer.from(`${term}--${boundary}--${term}`));
+    buffArray.push(Buffer.from(`--${boundary}--${term}`));
 
     const contentType = `multipart/related;type='application/octet-stream';boundary=${boundary}`;
     return Promise.resolve({
