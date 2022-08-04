@@ -55,12 +55,16 @@ socket.on('wado-request', async (data) => {
   logger.info('websocket WADO request received, fetching metadata now...');
   const { query }: { query: Record<string, string> } = data;
   const {
-    studyInstanceUid, seriesInstanceUid, sopInstanceUid
+    StudyInstanceUID, SeriesInstanceUID, SOPInstanceUID
   } = query;
 
   if (data) {
     try {
-      const { contentType, buffer } = await doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanceUid });
+      const { contentType, buffer } = await doWadoRs({
+        studyInstanceUid: StudyInstanceUID,
+        seriesInstanceUid: SeriesInstanceUID,
+        sopInstanceUid: SOPInstanceUID
+      });
       logger.info('sending websocket response stream');
       const stream = socketIOStream.createStream();
       socketIOStream(socket).emit(data.uuid, stream, { contentType: contentType });

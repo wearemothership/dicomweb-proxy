@@ -39,7 +39,7 @@ server.register(fastifyAutoload, {
   options: { prefix: '/viewer' },
 });
 
-server.decorateRequest('multipart', Buffer.alloc(0));
+server.decorateRequest('multipart', { getter: () => Buffer.alloc(0) });
 server.addContentTypeParser('multipart/related', { parseAs: 'buffer' }, async (request: FastifyRequest, payload: Buffer) => {
   request.multipart = payload;
 });

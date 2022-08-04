@@ -34,7 +34,6 @@
     "@fastify/static": "^6.4.1",
     "@iwharris/dicom-data-dictionary": "^1.26.0",
     "config": "^3.3.7",
-    "dcmjs": "^0.24.4",
     "deepmerge": "^4.2.2",
     "dicom-dimse-native": "^2.4.0",
     "dicom-parser": "^1.8.13",
