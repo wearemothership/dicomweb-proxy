@@ -7,6 +7,7 @@ import { LoggerSingleton } from './utils/logger';
 import { doWadoRs } from './dimse/wadoRs';
 import { storeData } from './dimse/storeData';
 import socketIOStream from '@wearemothership/socket.io-stream';
+import { readFileSync } from 'fs';
 
 const websocketUrl = config.get(ConfParams.WEBSOCKET_URL) as string;
 const logger = LoggerSingleton.Instance;
@@ -24,7 +25,9 @@ export const socket = io(websocketUrl, {
     token: config.get(ConfParams.WEBSOCKET_TOKEN),
   },
   transports: ['websocket'],
-  secure: true
+  cert: readFileSync(config.get(ConfParams.CERT), 'utf8').toString(),
+  key: readFileSync(config.get(ConfParams.KEY), 'utf8').toString(),
+  ca: readFileSync(config.get(ConfParams.CA), 'utf8').toString()
 });
 
 socket.on('connect', () => {
