@@ -1,4 +1,4 @@
-import fs, { promises } from 'fs';
+import { promises } from 'fs';
 import path from 'path';
 import { ConfParams, config } from './config';
 import { LoggerSingleton } from './logger';
@@ -17,11 +17,13 @@ const getDirectories = async (source: string) => {
 };
 
 export async function fileExists(pathname: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    fs.access(pathname, (err) => {
-      err ? resolve(false) : resolve(true);
-    });
-  });
+  try {
+    const stat = await promises.stat(pathname);
+    return !!stat;
+  }
+  catch {
+    return false;
+  }
 }
 
 export async function clearCache() {
