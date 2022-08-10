@@ -4,7 +4,7 @@ import { doFind } from './dimse/findData';
 import { stringToQueryLevel } from './dimse/querLevel';
 import { doWadoUri } from './dimse/wadoUri';
 import { LoggerSingleton } from './utils/logger';
-import { doWadoRs } from './dimse/wadoRs';
+import { doWadoRs, DataFormat } from './dimse/wadoRs';
 import { storeData } from './dimse/storeData';
 import socketIOStream from '@wearemothership/socket.io-stream';
 
@@ -48,11 +48,18 @@ socket.on('qido-request', async (data) => {
   }
 });
 
+type WadoRequest = {
+  StudyInstanceUID: string,
+  SeriesInstanceUID?: string,
+  SOPInstanceUID?: string,
+  dataFormat?: DataFormat
+}
+
 socket.on('wado-request', async (data) => {
   logger.info('websocket WADO request received, fetching metadata now...');
-  const { query }: { query: Record<string, string> } = data;
+  const { query }: { query: WadoRequest } = data;
   const {
-    StudyInstanceUID, SeriesInstanceUID, SOPInstanceUID
+    StudyInstanceUID, SeriesInstanceUID, SOPInstanceUID, dataFormat
   } = query;
 
   if (data) {
@@ -60,7 +67,8 @@ socket.on('wado-request', async (data) => {
       const { contentType, buffer } = await doWadoRs({
         studyInstanceUid: StudyInstanceUID,
         seriesInstanceUid: SeriesInstanceUID,
-        sopInstanceUid: SOPInstanceUID
+        sopInstanceUid: SOPInstanceUID,
+        dataFormat
       });
       logger.info('sending websocket response stream');
       const stream = socketIOStream.createStream();
