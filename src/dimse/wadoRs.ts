@@ -86,7 +86,14 @@ async function convertToJpeg(filepath: string, asThumbnail = false) {
  * 
  * Attaches needed headers
  */
-async function addFileToBuffer(pathname: string, filename: string, dataFormat?: DataFormat): Promise<Buffer> {
+interface AddFileToBuffer {
+  pathname: string,
+  filename: string,
+  instanceInfo: InstanceInfo,
+  dataFormat?: DataFormat,
+}
+
+async function addFileToBuffer({ pathname, filename, dataFormat, instanceInfo }: AddFileToBuffer): Promise<Buffer> {
   const logger = LoggerSingleton.Instance;
   const filepath = path.join(pathname, filename);
   const buffArray: Buffer[] = [];
@@ -94,6 +101,14 @@ async function addFileToBuffer(pathname: string, filename: string, dataFormat?: 
   // If there is a data format, use default compression
   if (dataFormat) {
     transferSyntax = '1.2.840.10008.1.2';
+  }
+
+  let contentLocation = `/studies/${instanceInfo.study}`;
+  if (instanceInfo.series) {
+    contentLocation += `/series/${instanceInfo.series}`;
+  }
+  if (instanceInfo.instance) {
+    contentLocation += `/instance/${instanceInfo.instance}`;
   }
 
   // Compress the file
@@ -129,10 +144,17 @@ async function addFileToBuffer(pathname: string, filename: string, dataFormat?: 
     returnData = data;
   }
   }
+  buffArray.push(Buffer.from(`Content-Location:${contentLocation};${term}`));
   buffArray.push(Buffer.from(term));
   buffArray.push(returnData);
   buffArray.push(Buffer.from(term));
   return Buffer.concat(buffArray);
+}
+
+type InstanceInfo = {
+  study: string,
+  series?: string,
+  instance?: string
 }
 
 export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanceUid, dataFormat }: WadoRsArgs): Promise<WadoRsResponse> {
@@ -158,15 +180,20 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     isDir = await stat.isDirectory();
   }
   let useCache = false;
-  const foundInstances: string[] = [];
+  const foundInstances: InstanceInfo[] = [];
   if (isDir) {
     // It's a directory, what things do we expect to find in this directory for this search?
     const json = deepmerge.all(await doFind(QUERY_LEVEL.IMAGE, { StudyInstanceUID: studyInstanceUid, SeriesInstanceUID: seriesInstanceUid ?? '', SOPInstanceUID: sopInstanceUid ?? '' }), { arrayMerge: combineMerge}) as QidoResponse[];
     const foundPromises = await Promise.all(json.map(async (instance) => {
       if (instance['00080018']) {
-        const id = instance['00080018'].Value[0];
-        foundInstances.push(id);
-        return fileExists(path.join(studyPath, id));
+        const instanceUid = instance['00080018'].Value[0];
+        const seriesUid = instance['0020000E'].Value[0];
+        foundInstances.push({
+          study: studyInstanceUid,
+          series: seriesUid,
+          instance: instanceUid
+        });
+        return fileExists(path.join(studyPath, instanceUid));
       }
       return true;
     }));
@@ -189,7 +216,7 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
   // We only need a thumbnail - get it and bail.
   if (dataFormat === 'thumbnail') {
     // Just use the first of the foundInstances for this search
-    const filePath = isDir ? path.join(pathname, foundInstances[0]) : pathname;
+    const filePath = isDir ? path.join(pathname, foundInstances[0].instance as string) : pathname;
     const buff = await convertToJpeg(filePath, true);
     if (buff) {
       return {
@@ -208,14 +235,16 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
       // We're in a directory, loop through the files we want and attach them to the return buffer
       const files = await fs.readdir(pathname);
       buffers = await Promise.all(files.map(async (file) => {
-        if (foundInstances.includes(file)) {
-          return addFileToBuffer(pathname, file, dataFormat);
+        const instanceInfo = foundInstances.find((i) => i.instance === file);
+        if (instanceInfo) {
+          return addFileToBuffer({ pathname, filename: file, dataFormat, instanceInfo });
         }
       }));
     }
     else {
       // Attach the one file that we need to the return buffer
-      buffers = [await addFileToBuffer(studyPath, filename, dataFormat)];
+      const instanceInfo = { study: studyInstanceUid, series: seriesInstanceUid, instance: sopInstanceUid };
+      buffers = [await addFileToBuffer({ pathname: studyPath, filename, dataFormat, instanceInfo })];
     }
 
     // Set up the boundaries and join together all of the file buffers to form
