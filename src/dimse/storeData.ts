@@ -85,12 +85,13 @@ export async function storeData(multipartData: Buffer, contentType: string): Pro
   }));
 
   const peers = config.get(ConfParams.PEERS) as DicomNode[];
+
   const storeOptions: storeScuOptions = {
     sourcePath: folderPath,
     source: config.get(ConfParams.SOURCE),
     target: peers[0],
     netTransferPropose: transferSyntax,
-    verbose: true
+    verbose: config.get(ConfParams.VERBOSE)
   };
 
   return new Promise((resolve, reject) => {
