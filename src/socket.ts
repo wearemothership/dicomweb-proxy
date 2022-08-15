@@ -28,7 +28,8 @@ const ioConfig: Partial<ManagerOptions & SocketOptions> = {
   transports: ['websocket']
 };
 
-if (config.get(ConfParams.SECURE) === 'true') {
+if (config.get(ConfParams.SECURE)) {
+  logger.info('Starting secure server');
   ioConfig.cert = readFileSync(config.get(ConfParams.CERT), 'utf8').toString();
   ioConfig.key = readFileSync(config.get(ConfParams.KEY), 'utf8').toString();
   ioConfig.ca = readFileSync(config.get(ConfParams.CA), 'utf8').toString();

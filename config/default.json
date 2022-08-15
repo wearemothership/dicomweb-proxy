@@ -31,7 +31,7 @@
   */
 
   // transfer syntax (e.g. compression of dicom files) used for transmission via wado and proposed to pacs
-  "transferSyntax": "1.2.840.10008.1.2.4.80",
+  "transferSyntax": "1.2.840.10008.1.2.4.50",
 
   // Set the mimeType to match the selected transferSyntax
   "mimeType": "image/dicom+jpeg",
@@ -55,7 +55,7 @@
   "useCget": true,
 
   // define which level to use for C-Move/C-Get fetches: STUDY, SERIES, IMAGE
-  "useFetchLevel": "SERIES",
+  "useFetchLevel": "STUDY",
 
   // number of associations to PACS run in parallel
   "maxAssociations": 4,
@@ -67,7 +67,7 @@
   "qidoAppendWildcard": true,
 
   // enable verbose logging to std::out (contains DIMSE output)
-  "verboseLogging": false,
+  "verboseLogging": true,
 
   // only disable when using wadouri instead of wadors
   "fullMeta": true,
@@ -81,9 +81,9 @@
 
   "secure": true,
   
-  "certificatePath": "./crt.pem",
+  "certificatePath": "./client3-crt.pem",
 
-  "certificateKeyPath": "./key.pem",
+  "certificateKeyPath": "./client3-key.pem",
 
   "certificateChainPath": "./ca-crt.pem"
 
