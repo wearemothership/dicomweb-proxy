@@ -41,7 +41,7 @@ socket.on('connect', () => {
   logger.info('websocket connection established');
 });
 
-socket.on('qido-request', async (data) => {
+socket.on('qido-request', async (data, callback) => {
   logger.info('websocket QIDO request received, fetching metadata now...');
   const { level, query }: { level: string; query: Record<string, string> } = data;
   
@@ -50,10 +50,20 @@ socket.on('qido-request', async (data) => {
       const lvl = stringToQueryLevel(level);
       const json = await doFind(lvl, query);
       logger.info('sending websocket response');
-      socket.emit(data.uuid, json);
+      if (data.uuid) {
+        socket.emit(data.uuid, json);
+      }
+      else {
+        callback?.(json);
+      }
     }
     catch (e) {
-      socket.emit(data.uuid, e);
+      if (data.uuid) {
+        socket.emit(data.uuid, e);
+      }
+      else {
+        callback?.(e);
+      }
     }
   }
 });
@@ -65,7 +75,7 @@ type WadoRequest = {
   dataFormat?: DataFormat
 }
 
-socket.on('wado-request', async (data) => {
+socket.on('wado-request', async (data, callback) => {
   logger.info('websocket WADO request received, fetching metadata now...');
   const { query }: { query: WadoRequest } = data;
   const {
@@ -81,26 +91,32 @@ socket.on('wado-request', async (data) => {
         dataFormat
       });
       logger.info('sending websocket response stream');
-      const stream = socketIOStream.createStream();
-      socketIOStream(socket).emit(data.uuid, stream, { contentType: contentType });
-      let offset = 0;
-      const chunkSize = 512*1024; // 512kb
-      const writeBuffer = () => {
-        let ok = true;
-        do {
-          const b = Buffer.alloc(chunkSize);
-          buffer.copy(b, 0, offset, offset + chunkSize);
-          ok = stream.write(b);
-          offset += chunkSize;
-        } while (offset < buffer.length && ok);
-        if (offset < buffer.length) {
-          stream.once('drain', writeBuffer);
-        }
-        else {
-          stream.end();
-        }
-      };
-      writeBuffer();
+      if (data.uuid) {
+        const stream = socketIOStream.createStream();
+        socketIOStream(socket).emit(data.uuid, stream, { contentType: contentType });
+  
+        let offset = 0;
+        const chunkSize = 512*1024; // 512kb
+        const writeBuffer = () => {
+          let ok = true;
+          do {
+            const b = Buffer.alloc(chunkSize);
+            buffer.copy(b, 0, offset, offset + chunkSize);
+            ok = stream.write(b);
+            offset += chunkSize;
+          } while (offset < buffer.length && ok);
+          if (offset < buffer.length) {
+            stream.once('drain', writeBuffer);
+          }
+          else {
+            stream.end();
+          }
+        };
+        writeBuffer();
+      }
+      else {
+        callback?.({ buffer, headers: { contentType: contentType } });
+      }      
     }
     catch (e) {
       logger.error('Emitting error', e);
@@ -109,28 +125,30 @@ socket.on('wado-request', async (data) => {
   }
 });
 
-socketIOStream(socket).on('stow-request', async (stream: any, info: StowInfo): Promise<void> => new Promise((resolve) => {
+socket.on('stow-request', async (stream: Buffer, info: StowInfo, callback): Promise<void> => {
   logger.info('websocket STOW-RS request received');
   const { uuid, contentType } = info;
-  const buff: Buffer[] = [];
-  stream.on('data', (data: Buffer) => {
-    buff.push(data);
-  });
 
-  stream.on('end', async () => {
-    try {
-      const b = Buffer.concat(buff);
-      const result = await storeData(b, contentType);
+  try {
+    const result = await storeData(stream, contentType);
+    if (uuid) {
       socket.emit(uuid, { success: true, message: result.message });
     }
-    catch (e) {
+    else {
+      callback?.({ success: true, message: result.message });
+    }
+  }
+  catch (e) {
+    if (uuid) {
       socket.emit(uuid, { success: false, message: (e as Error).message });
     }
-    return resolve();
-  });
-}));
+    else {
+      callback?.({ success: false, message: (e as Error).message });
+    }
+  }
+});
 
-socket.on('wadouri-request', async (data) => {
+socket.on('wadouri-request', async (data, callback) => {
   logger.info('websocket wadouri request received, fetching metadata now...');
   if (data) {
     const {
@@ -142,11 +160,21 @@ socket.on('wadouri-request', async (data) => {
         seriesInstanceUid: seriesInstanceUid ?? seriesUID,
         sopInstanceUid: sopInstanceUid ?? objectUID
       });
-      socket.emit(data.uuid, rsp);
+      if (data.uuid) {
+        socket.emit(data.uuid, rsp);
+      }
+      else {
+        callback?.(rsp);
+      }
     }
     catch (error) {
       logger.error(error);
-      socket.emit(data.uuid, error);
+      if (data.uuid) {
+        socket.emit(data.uuid, error);
+      }
+      else {
+        callback?.(error);
+      }
     }
   }
 });
