@@ -144,11 +144,14 @@ async function addFileToBuffer({ pathname, filename, dataFormat, instanceInfo }:
     returnData = data;
   }
   }
-  buffArray.push(Buffer.from(`Content-Location:${contentLocation};${term}`));
-  buffArray.push(Buffer.from(term));
-  buffArray.push(returnData);
-  buffArray.push(Buffer.from(term));
-  return Buffer.concat(buffArray);
+  if (returnData) {
+    buffArray.push(Buffer.from(`Content-Location:${contentLocation};${term}`));
+    buffArray.push(Buffer.from(term));
+    buffArray.push(returnData);
+    buffArray.push(Buffer.from(term));
+    return Buffer.concat(buffArray);
+  }
+  throw new Error(`Failed to create buffer for ${filepath}`);
 }
 
 type InstanceInfo = {
