@@ -3,11 +3,16 @@ import path from 'path';
 import { ConfParams, config } from './config';
 import { LoggerSingleton } from './logger';
 
-let wadoInProgress = false;
+let wadoInProgress = 0;
 let cacheTimeout;
 
 export const setWadoInProgress = (inProgress: boolean) => {
-  wadoInProgress = inProgress
+  if (inProgress) {
+    wadoInProgress += 1;
+  }
+  else {
+    wadoInProgress -= 1;
+  }
 }
 
 const getDirectories = async (source: string) => {
@@ -34,7 +39,7 @@ export async function fileExists(pathname: string): Promise<boolean> {
 
 export async function clearCache() {
   const logger = LoggerSingleton.Instance;
-  if (wadoInProgress) {
+  if (wadoInProgress > 0) {
     logger.warn("WadoRS In progress...delaying")
     if (!cacheTimeout) {
       cacheTimeout = setTimeout(() => {
