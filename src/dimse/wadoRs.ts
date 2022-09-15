@@ -118,6 +118,8 @@ async function addFileToBuffer({ pathname, filename, dataFormat, instanceInfo }:
 
   // This will throw out if the file doesn't OK (but that's what we want)
   const data = await fs.readFile(filepath);
+  // Change the modified & accessed date to now for cache cleanup
+  await fs.utimes(filepath, new Date(), new Date())
   let returnData;
   switch (dataFormat) {
   case 'bulkdata':
