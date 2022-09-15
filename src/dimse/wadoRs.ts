@@ -9,7 +9,7 @@ import { QUERY_LEVEL } from './querLevel';
 import deepmerge from 'deepmerge';
 import dicomParser from 'dicom-parser';
 import combineMerge from '../utils/combineMerge';
-import { fileExists } from '../utils/fileHelper';
+import { fileExists, setWadoInProgress } from '../utils/fileHelper';
 import { execFile as exFile } from 'child_process';
 import util from 'util';
 
@@ -47,11 +47,14 @@ const term = '\r\n';
  * @param [asThumbnail=false] Return as thumbnail
  */
 async function convertToJpeg(filepath: string, asThumbnail = false) {
+  let filePath = `${filepath}.jpg`;
+  let exists = false;
   try {
     await execFile(
       'dcmj2pnm',
       ['+oj', '+Jq', asThumbnail ? '10' : '100', filepath, `${filepath}.jpg`]
     );
+    exists = await fileExists(filePath);
   }
   catch (e) {
     // Try again but with all frames - if this fails don't catch the error (fail!)
@@ -59,20 +62,11 @@ async function convertToJpeg(filepath: string, asThumbnail = false) {
       'dcmj2pnm',
       ['+oj', '+Jq', asThumbnail ? '10' : '100', '+Fa', filepath, `${filepath}`]
     );
+    filePath = `${filepath}.0.jpg`;
+    exists = await fileExists(filePath);
   }
-  let exists = await fileExists(`${filepath}.jpg`);
-  let filePath;
+ 
   if (exists) {
-    filePath = `${filepath}.jpg`;
-  }
-  else {
-    exists = await fileExists(`${filepath}.0.jpg`);
-    if (exists) {
-      filePath = `${filepath}.0.jpg`;
-    }
-  }
-
-  if (exists && filePath) {
     return fs.readFile(filePath);
   }
   return undefined;
@@ -121,6 +115,8 @@ async function addFileToBuffer({ pathname, filename, dataFormat, instanceInfo }:
 
   // This will throw out if the file doesn't OK (but that's what we want)
   const data = await fs.readFile(filepath);
+  // Change the modified & accessed date to now for cache cleanup
+  await fs.utimes(filepath, new Date(), new Date());
   let returnData;
   switch (dataFormat) {
   case 'bulkdata':
@@ -144,11 +140,14 @@ async function addFileToBuffer({ pathname, filename, dataFormat, instanceInfo }:
     returnData = data;
   }
   }
-  buffArray.push(Buffer.from(`Content-Location:${contentLocation};${term}`));
-  buffArray.push(Buffer.from(term));
-  buffArray.push(returnData);
-  buffArray.push(Buffer.from(term));
-  return Buffer.concat(buffArray);
+  if (returnData) {
+    buffArray.push(Buffer.from(`Content-Location:${contentLocation};${term}`));
+    buffArray.push(Buffer.from(term));
+    buffArray.push(returnData);
+    buffArray.push(Buffer.from(term));
+    return Buffer.concat(buffArray);
+  }
+  throw new Error(`Failed to create buffer for ${filepath}`);
 }
 
 type InstanceInfo = {
@@ -172,6 +171,8 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     filename = sopInstanceUid;
     pathname = path.join(pathname, sopInstanceUid);
   }
+
+  setWadoInProgress(true);
 
   // Is the path that we have a directory or a file?
   let isDir = true;
@@ -234,7 +235,7 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     if (isDir) {
       // We're in a directory, loop through the files we want and attach them to the return buffer
       const files = await fs.readdir(pathname);
-      buffers = await Promise.all(files.map(async (file) => {
+      buffers = await Promise.all(files.map((file) => {
         const instanceInfo = foundInstances.find((i) => i.instance === file);
         if (instanceInfo) {
           return addFileToBuffer({ pathname, filename: file, dataFormat, instanceInfo });
@@ -252,20 +253,20 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     const boundary = studyInstanceUid;
     const buffArray: Buffer[] = [];
     buffers = buffers.filter((b: Buffer | undefined) => !!b);
-    buffers.forEach(async (buff) => {
+    buffers.forEach((buff) => {
       if (buff) {
         buffArray.push(Buffer.from(`--${boundary}${term}`));
         buffArray.push(buff);
       }
     });
     buffArray.push(Buffer.from(`--${boundary}--${term}`));
-
+    setWadoInProgress(false);
     // We need to set the correct contentType depending on what was asked for.
     let type = 'application/dicom';
     if (dataFormat === 'rendered') {
       type = 'image/jpeg';
     }
-    if (dataFormat?.match(/bulkdata|pixeldata/ig)) {
+    else if (dataFormat?.match(/bulkdata|pixeldata/ig)) {
       type = 'application/octet-stream';
     }
 
