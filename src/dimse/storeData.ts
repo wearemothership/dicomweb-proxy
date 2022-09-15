@@ -54,7 +54,7 @@ async function handleStowRequest (multipartData: Buffer, contentType: string) {
       throw new Error('Could not split response data');
     }
   }
-  return Promise.reject(new Error('Invalid response from proxy'));
+  throw new Error('Invalid response from proxy');
 }
 
 async function getImagePixelData(fileBuffer: Buffer) {
