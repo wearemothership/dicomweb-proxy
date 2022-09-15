@@ -5,8 +5,9 @@
   "bin": "./build/app.js",
   "scripts": {
     "start": "ts-node src/app.ts",
+    "start-node": "node build/app.js",
     "format": "npx prettier ./src",
-    "build": "tsc --p ./src/tsconfig.json",
+    "build": "rimraf build && tsc --p ./src/tsconfig.json",
     "pkg:win": "npm run build && npx pkg --targets node16-win-x64 package.json"
   },
   "repository": {

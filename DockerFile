@@ -1,0 +1,31 @@
+# Use Node 16
+FROM node:16-alpine
+
+# Create Working Directory
+WORKDIR /usr/src/dicomweb-proxy
+
+RUN apk add --no-cache cmake build-base curl \
+	&& cd /tmp \
+	&& curl https://dicom.offis.de/download/dcmtk/dcmtk367/dcmtk-3.6.7.tar.gz | tar xz \
+	&& ls \
+	&& mkdir dcmtk-3.6.7-build \
+	&& cd dcmtk-3.6.7-build \
+	&& cmake ../dcmtk-3.6.7 \
+	&& make -j8 \
+	&& make DESTDIR=../../dcmtk-3.6.7-install install \
+	&& cd ../..
+
+# Install app dependencies
+COPY package*.json ./
+ENV NODE_ENV production
+RUN npm install
+
+# Copy app files
+COPY ./build ./build
+COPY ./config ./config
+
+# Expose required port
+EXPOSE 5000
+
+# Run the app
+CMD ["node", "./build/app.js"]

@@ -1,17 +1,16 @@
 {
-  // our SCP (only used if useCget is false
   "source": {
-    "aet": "DICOMWEB_PROXY",
+    "aet": "DIMSE",
     "ip": "127.0.0.1",
-    "port": 8888
+    "port": 9999
   },
 
   // define DICOM peers here
   "peers": [
     {
-      "aet": "CONQUESTSRV1",
+      "aet": "ORTHANC",
       "ip": "127.0.0.1",
-      "port": 5678
+      "port": 4242
     }
   ],
 
@@ -37,7 +36,7 @@
   "mimeType": "image/dicom+jpeg",
 
   // only used for JPEG process 1,2,4
-  "lossyQuality": 60,
+  "lossyQuality": 80,
 
   // log directory
   "logDir": "./logs",
@@ -77,14 +76,14 @@
 
   // this is the secret your dicomweb-websocket-bride needs to configure too, make sure to keep it secret, and of course change it ,-) hint: use https://hashgenerator.de/
   "websocketToken":
-    "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
+    "20fff5c3a790f2f662ebc15f44852aa20039f5165507f56bac6319d1f19b44fd47d9a5119a28b402846147a07d1b12006d45ec2316f527fb69bfd529e0a773fd",
 
   "secure": true,
   
-  "certificatePath": "./client3-crt.pem",
+  "certificatePath": "./certs/client3-crt.pem",
 
-  "certificateKeyPath": "./client3-key.pem",
+  "certificateKeyPath": "./certs/client3-key.pem",
 
-  "certificateChainPath": "./ca-crt.pem"
+  "certificateChainPath": "./certs/ca-crt.pem"
 
 }
