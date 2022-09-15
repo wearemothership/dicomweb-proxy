@@ -4,7 +4,7 @@ import { ConfParams, config } from './config';
 import { LoggerSingleton } from './logger';
 
 let wadoInProgress = 0;
-let cacheTimeout;
+let cacheTimeout: NodeJS.Timeout | undefined;
 
 export const setWadoInProgress = (inProgress: boolean) => {
   if (inProgress) {
