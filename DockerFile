@@ -13,12 +13,15 @@ RUN apk add --no-cache cmake build-base curl \
 	&& cmake ../dcmtk-3.6.7 \
 	&& make -j8 \
 	&& make DESTDIR=../../dcmtk-3.6.7-install install \
-	&& cd ../..
+	&& cd .. \
+	&& rm -rf dcmtk-3.6.7-build \
+	&& rm -f dcmtk-3.6.7.tar.gz \
+	&& cd ..
 
 # Install app dependencies
 COPY package*.json ./
 ENV NODE_ENV production
-RUN npm install
+RUN npm install --omit=dev
 
 # Copy app files
 COPY ./build ./build
