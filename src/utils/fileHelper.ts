@@ -1,9 +1,19 @@
-import fs from 'fs';
-import path from 'path';
 import { promises } from 'fs';
+import path from 'path';
 import { ConfParams, config } from './config';
 import { LoggerSingleton } from './logger';
 
+let wadoInProgress = 0;
+let cacheTimeout: NodeJS.Timeout | undefined;
+
+export const setWadoInProgress = (inProgress: boolean) => {
+  if (inProgress) {
+    wadoInProgress += 1;
+  }
+  else {
+    wadoInProgress -= 1;
+  }
+}
 
 const getDirectories = async (source: string) => {
   try {
@@ -18,17 +28,29 @@ const getDirectories = async (source: string) => {
 }
 
 export async function fileExists(pathname: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    fs.access(pathname, (err) => {
-      err ? resolve(false) : resolve(true);
-    });
-  });
+  try {
+    const stat = await promises.stat(pathname);
+    return !!stat;
+  }
+  catch {
+    return false;
+  }
 }
 
 export async function clearCache() {
+  const logger = LoggerSingleton.Instance;
+  if (wadoInProgress > 0) {
+    logger.warn("WadoRS In progress...delaying")
+    if (!cacheTimeout) {
+      cacheTimeout = setTimeout(() => {
+        cacheTimeout = undefined;
+        clearCache();
+      }, 2000);
+    }
+    return;
+  }
   const storagePath = config.get(ConfParams.STORAGE_PATH) as string;
   const retention = config.get(ConfParams.CACHE_RETENTION) as number;
-  const logger = LoggerSingleton.Instance;
 
   if (retention < 0) {
     logger.warn('cache cleanup disabled');
@@ -48,4 +70,4 @@ export async function clearCache() {
       await promises.rm(filepath, { recursive: true, force: true });
     }
   }
-};
+}
