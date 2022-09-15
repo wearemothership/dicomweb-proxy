@@ -47,11 +47,14 @@ const term = '\r\n';
  * @param [asThumbnail=false] Return as thumbnail
  */
 async function convertToJpeg(filepath: string, asThumbnail = false) {
+  let filePath = `${filepath}.jpg`;
+  let exists = false;
   try {
     await execFile(
       'dcmj2pnm',
       ['+oj', '+Jq', asThumbnail ? '10' : '100', filepath, `${filepath}.jpg`]
     );
+    exists = await fileExists(filePath);
   }
   catch (e) {
     // Try again but with all frames - if this fails don't catch the error (fail!)
@@ -59,17 +62,11 @@ async function convertToJpeg(filepath: string, asThumbnail = false) {
       'dcmj2pnm',
       ['+oj', '+Jq', asThumbnail ? '10' : '100', '+Fa', filepath, `${filepath}`]
     );
+    filePath = `${filepath}.0.jpg`
+    exists = await fileExists(filePath);
   }
-  let filePath = `${filepath}.jpg`;
-  let exists = await fileExists(filePath);
-  if (!exists) {
-    exists = await fileExists(`${filepath}.0.jpg`);
-    if (exists) {
-      filePath = `${filepath}.0.jpg`;
-    }
-  }
-
-  if (exists && filePath) {
+ 
+  if (exists) {
     return fs.readFile(filePath);
   }
   return undefined;
