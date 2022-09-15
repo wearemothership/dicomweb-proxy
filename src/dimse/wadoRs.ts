@@ -9,7 +9,7 @@ import { QUERY_LEVEL } from './querLevel';
 import deepmerge from 'deepmerge';
 import dicomParser from 'dicom-parser';
 import combineMerge from '../utils/combineMerge';
-import { fileExists } from '../utils/fileHelper';
+import { fileExists, setWadoInProgress } from '../utils/fileHelper';
 import { execFile as exFile } from 'child_process';
 import util from 'util';
 
@@ -173,6 +173,8 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     pathname = path.join(pathname, sopInstanceUid);
   }
 
+  setWadoInProgress(true);
+
   // Is the path that we have a directory or a file?
   let isDir = true;
   if (await fileExists(pathname)) {
@@ -234,7 +236,7 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     if (isDir) {
       // We're in a directory, loop through the files we want and attach them to the return buffer
       const files = await fs.readdir(pathname);
-      buffers = await Promise.all(files.map(async (file) => {
+      buffers = await Promise.all(files.map((file) => {
         const instanceInfo = foundInstances.find((i) => i.instance === file);
         if (instanceInfo) {
           return addFileToBuffer({ pathname, filename: file, dataFormat, instanceInfo });
@@ -259,7 +261,7 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
       }
     });
     buffArray.push(Buffer.from(`--${boundary}--${term}`));
-
+    setWadoInProgress(false);
     // We need to set the correct contentType depending on what was asked for.
     let type = 'application/dicom';
     if (dataFormat === 'rendered') {
