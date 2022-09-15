@@ -19,6 +19,10 @@ export const enum ConfParams {
   CACHE_RETENTION,
   FULL_META,
   LOSSY_QUALITY,
+  SECURE,
+  CERT,
+  KEY,
+  CA,
 }
 
 const ConfDef = new Map([
@@ -40,6 +44,10 @@ const ConfDef = new Map([
   [ConfParams.CACHE_RETENTION, 'cacheRetentionMinutes'],
   [ConfParams.FULL_META, 'fullMeta'],
   [ConfParams.LOSSY_QUALITY, 'lossyQuality'],
+  [ConfParams.SECURE, 'secure'],
+  [ConfParams.CERT, 'certificatePath'],
+  [ConfParams.KEY, 'certificateKeyPath'],
+  [ConfParams.CA, 'certificateChainPath'],
 ]);
 
 interface IConfig {

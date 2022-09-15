@@ -31,7 +31,7 @@
   */
 
   // transfer syntax (e.g. compression of dicom files) used for transmission via wado and proposed to pacs
-  "transferSyntax": "1.2.840.10008.1.2.4.80",
+  "transferSyntax": "1.2.840.10008.1.2.4.50",
 
   // Set the mimeType to match the selected transferSyntax
   "mimeType": "image/dicom+jpeg",
@@ -55,7 +55,7 @@
   "useCget": true,
 
   // define which level to use for C-Move/C-Get fetches: STUDY, SERIES, IMAGE
-  "useFetchLevel": "SERIES",
+  "useFetchLevel": "STUDY",
 
   // number of associations to PACS run in parallel
   "maxAssociations": 4,
@@ -67,15 +67,24 @@
   "qidoAppendWildcard": true,
 
   // enable verbose logging to std::out (contains DIMSE output)
-  "verboseLogging": false,
+  "verboseLogging": true,
 
   // only disable when using wadouri instead of wadors
   "fullMeta": true,
 
   // disabled when empty, otherwise use connection url e.g. ws://localhost:6001
-  "websocketUrl": "",
+  "websocketUrl": "wss://dev-pacs.vpop-pro.com:6001",
 
   // this is the secret your dicomweb-websocket-bride needs to configure too, make sure to keep it secret, and of course change it ,-) hint: use https://hashgenerator.de/
   "websocketToken":
-    "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+    "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
+
+  "secure": true,
+  
+  "certificatePath": "./client3-crt.pem",
+
+  "certificateKeyPath": "./client3-key.pem",
+
+  "certificateChainPath": "./ca-crt.pem"
+
 }

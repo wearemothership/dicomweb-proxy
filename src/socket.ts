@@ -1,5 +1,6 @@
 import { ConfParams, config } from './utils/config';
 import { io } from 'socket.io-client';
+import type { ManagerOptions, SocketOptions } from 'socket.io-client';
 import { doFind } from './dimse/findData';
 import { stringToQueryLevel } from './dimse/querLevel';
 import { doWadoUri } from './dimse/wadoUri';
@@ -7,6 +8,7 @@ import { LoggerSingleton } from './utils/logger';
 import { doWadoRs, DataFormat } from './dimse/wadoRs';
 import { storeData } from './dimse/storeData';
 import socketIOStream from '@wearemothership/socket.io-stream';
+import { readFileSync } from 'fs';
 
 const websocketUrl = config.get(ConfParams.WEBSOCKET_URL) as string;
 const logger = LoggerSingleton.Instance;
@@ -16,16 +18,24 @@ type StowInfo = {
   contentType: string
 }
 
-export const socket = io(websocketUrl, {
+const ioConfig: Partial<ManagerOptions & SocketOptions> = {
   reconnection: true,
   reconnectionDelayMax: 10000,
   autoConnect: false,
   auth: {
     token: config.get(ConfParams.WEBSOCKET_TOKEN),
   },
-  transports: ['websocket'],
-  secure: true
-});
+  transports: ['websocket']
+};
+
+if (config.get(ConfParams.SECURE)) {
+  logger.info('Starting secure server');
+  ioConfig.cert = readFileSync(config.get(ConfParams.CERT), 'utf8').toString();
+  ioConfig.key = readFileSync(config.get(ConfParams.KEY), 'utf8').toString();
+  ioConfig.ca = readFileSync(config.get(ConfParams.CA), 'utf8').toString();
+}
+
+export const socket = io(websocketUrl, ioConfig);
 
 socket.on('connect', () => {
   logger.info('websocket connection established');
