@@ -60,12 +60,9 @@ async function convertToJpeg(filepath: string, asThumbnail = false) {
       ['+oj', '+Jq', asThumbnail ? '10' : '100', '+Fa', filepath, `${filepath}`]
     );
   }
-  let exists = await fileExists(`${filepath}.jpg`);
-  let filePath;
-  if (exists) {
-    filePath = `${filepath}.jpg`;
-  }
-  else {
+  let filePath = `${filepath}.jpg`;
+  let exists = await fileExists(filePath);
+  if (!exists) {
     exists = await fileExists(`${filepath}.0.jpg`);
     if (exists) {
       filePath = `${filepath}.0.jpg`;
@@ -103,12 +100,12 @@ async function addFileToBuffer({ pathname, filename, dataFormat, instanceInfo }:
     transferSyntax = '1.2.840.10008.1.2';
   }
 
-  let contentLocation = `/studies/${instanceInfo.study}`
+  let contentLocation = `/studies/${instanceInfo.study}`;
   if (instanceInfo.series) {
-    contentLocation += `/series/${instanceInfo.series}`
+    contentLocation += `/series/${instanceInfo.series}`;
   }
   if (instanceInfo.instance) {
-    contentLocation += `/instance/${instanceInfo.instance}`
+    contentLocation += `/instance/${instanceInfo.instance}`;
   }
 
   // Compress the file
@@ -144,11 +141,14 @@ async function addFileToBuffer({ pathname, filename, dataFormat, instanceInfo }:
     returnData = data;
   }
   }
-  buffArray.push(Buffer.from(`Content-Location:${contentLocation};${term}`));
-  buffArray.push(Buffer.from(term));
-  buffArray.push(returnData);
-  buffArray.push(Buffer.from(term));
-  return Buffer.concat(buffArray);
+  if (returnData) {
+    buffArray.push(Buffer.from(`Content-Location:${contentLocation};${term}`));
+    buffArray.push(Buffer.from(term));
+    buffArray.push(returnData);
+    buffArray.push(Buffer.from(term));
+    return Buffer.concat(buffArray);
+  }
+  throw new Error(`Failed to create buffer for ${filepath}`);
 }
 
 type InstanceInfo = {
@@ -161,12 +161,12 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
   const logger = LoggerSingleton.Instance;
   // Set up all the paths and query levels.
   const storagePath = config.get(ConfParams.STORAGE_PATH) as string;
-  let queryLevel = QUERY_LEVEL.STUDY
+  let queryLevel = QUERY_LEVEL.STUDY;
   const studyPath = path.join(storagePath, studyInstanceUid);
   let pathname = studyPath;
   let filename = '';
   if (seriesInstanceUid) {
-    queryLevel = QUERY_LEVEL.SERIES
+    queryLevel = QUERY_LEVEL.SERIES;
   }
   if (sopInstanceUid) {
     filename = sopInstanceUid;
@@ -233,17 +233,17 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
   try {
     if (isDir) {
       // We're in a directory, loop through the files we want and attach them to the return buffer
-      const files = await fs.readdir(pathname)
+      const files = await fs.readdir(pathname);
       buffers = await Promise.all(files.map(async (file) => {
-        const instanceInfo = foundInstances.find((i) => i.instance === file)
+        const instanceInfo = foundInstances.find((i) => i.instance === file);
         if (instanceInfo) {
           return addFileToBuffer({ pathname, filename: file, dataFormat, instanceInfo });
         }
-      }))
+      }));
     }
     else {
       // Attach the one file that we need to the return buffer
-      const instanceInfo = { study: studyInstanceUid, series: seriesInstanceUid, instance: sopInstanceUid }
+      const instanceInfo = { study: studyInstanceUid, series: seriesInstanceUid, instance: sopInstanceUid };
       buffers = [await addFileToBuffer({ pathname: studyPath, filename, dataFormat, instanceInfo })];
     }
 
@@ -252,7 +252,7 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     const boundary = studyInstanceUid;
     const buffArray: Buffer[] = [];
     buffers = buffers.filter((b: Buffer | undefined) => !!b);
-    buffers.forEach(async (buff) => {
+    buffers.forEach((buff) => {
       if (buff) {
         buffArray.push(Buffer.from(`--${boundary}${term}`));
         buffArray.push(buff);
@@ -265,7 +265,7 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
     if (dataFormat === 'rendered') {
       type = 'image/jpeg';
     }
-    if (dataFormat?.match(/bulkdata|pixeldata/ig)) {
+    else if (dataFormat?.match(/bulkdata|pixeldata/ig)) {
       type = 'application/octet-stream';
     }
 
@@ -275,7 +275,8 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
       buffer: Buffer.concat(buffArray),
     });
 
-  } catch (error) {
+  }
+  catch (error) {
     logger.error(`failed to process ${pathname}`);
     throw error;
   }
