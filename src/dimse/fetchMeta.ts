@@ -45,7 +45,8 @@ export async function fetchMeta(query: any, studyInstanceUID: string, seriesInst
       const result = await parseMeta(json, studyInstanceUID, seriesInstanceUID);
       logger.info('parsing finished, resolving');
       return Promise.resolve(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(error);
       throw error;
     }

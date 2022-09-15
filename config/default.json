@@ -62,7 +62,7 @@
 
   // do not issue c-find if search contains less characters
   "qidoMinChars": 0,
-
+  
   // auto append * for patient name query
   "qidoAppendWildcard": true,
 

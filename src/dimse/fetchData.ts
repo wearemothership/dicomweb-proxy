@@ -17,7 +17,8 @@ export async function waitOrFetchData(studyUid: string, seriesUid: string, image
   for (const peer of peers) {
     try {
       return await waitOrFetchDataOnAet(studyUid, seriesUid, imageUid, level, peer);
-    } catch (error) {
+    }
+    catch (error) {
       logger.warn(error);
     }
   }

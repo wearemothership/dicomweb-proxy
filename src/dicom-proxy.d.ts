@@ -1,1 +1,1 @@
-declare module "@wearemothership/socket.io-stream";
+declare module '@wearemothership/socket.io-stream';

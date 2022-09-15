@@ -5,6 +5,7 @@ import { QUERY_LEVEL } from '../dimse/querLevel';
 import { doWadoRs } from '../dimse/wadoRs';
 import { doWadoUri } from '../dimse/wadoUri';
 import { LoggerSingleton } from '../utils/logger';
+import { storeData } from '../dimse/storeData';
 
 import deepmerge from 'deepmerge';
 import combineMerge from '../utils/combineMerge';
@@ -42,7 +43,33 @@ module.exports = function (server: FastifyInstance, opts: unknown, done: () => v
       const { query } = req;
       const json = deepmerge.all(await doFind(QUERY_LEVEL.STUDY, query), options);
       reply.send(json);
-    } catch (error) {
+    }
+    catch (error) {
+      logger.error(error);
+      reply.send(500);
+    }
+  });
+
+  //------------------------------------------------------------------
+
+  server.post<{
+    Body: { multipart: Buffer },
+    Headers: Headers
+  }>('/rs/studies', async (req, reply) => {
+    try {
+      const { body, headers } = req;
+      const contentType = headers['content-type'];
+
+      if (body.multipart && contentType) {
+        const json = await storeData(body.multipart, contentType);
+        reply.send(json);
+      }
+      else {
+        logger.error(`Missing arguments. Body length: ${body.multipart.length}, content-type: ${contentType}`);
+        reply.send(400);
+      }
+    }
+    catch (error) {
       logger.error(error);
       reply.send(500);
     }
@@ -61,7 +88,8 @@ module.exports = function (server: FastifyInstance, opts: unknown, done: () => v
       const rsp = await doWadoRs({ studyInstanceUid });
       reply.header('Content-Type', rsp.contentType);
       reply.send(rsp.buffer);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(error);
       reply.send(500);
     }
@@ -133,7 +161,8 @@ module.exports = function (server: FastifyInstance, opts: unknown, done: () => v
     try {
       const json = deepmerge.all(await doFind(QUERY_LEVEL.SERIES, query), options);
       reply.send(json);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(error);
       reply.send(500);
     }
@@ -151,7 +180,8 @@ module.exports = function (server: FastifyInstance, opts: unknown, done: () => v
     try {
       const json = deepmerge.all(await doFind(QUERY_LEVEL.SERIES, query), options);
       reply.send(json);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(error);
       reply.send(500);
     }
@@ -159,7 +189,7 @@ module.exports = function (server: FastifyInstance, opts: unknown, done: () => v
 
   //------------------------------------------------------------------
 
-    server.get<{
+  server.get<{
       Params: IParamsSeries;
       Querystring: QueryParams;
     }>('/rs/studies/:studyInstanceUid/series/:seriesInstanceUid', async (req, reply) => {
@@ -170,7 +200,8 @@ module.exports = function (server: FastifyInstance, opts: unknown, done: () => v
         const rsp = await doWadoRs({ studyInstanceUid, seriesInstanceUid });
         reply.header('Content-Type', rsp.contentType);
         reply.send(rsp.buffer);
-      } catch (error) {
+      }
+      catch (error) {
         logger.error(error);
         reply.send(500);
       }
@@ -243,7 +274,8 @@ module.exports = function (server: FastifyInstance, opts: unknown, done: () => v
     try {
       const json = deepmerge.all(await doFind(QUERY_LEVEL.IMAGE, query), options);
       reply.send(json);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(error);
       reply.send(500);
     }
@@ -263,7 +295,8 @@ module.exports = function (server: FastifyInstance, opts: unknown, done: () => v
     try {
       const rsp = await fetchMeta(query, studyInstanceUid, seriesInstanceUid);
       reply.send(rsp);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(error);
       reply.send(500);
     }
@@ -334,11 +367,34 @@ module.exports = function (server: FastifyInstance, opts: unknown, done: () => v
       const rsp = await doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanceUid, dataFormat: 'pixeldata' });
       reply.header('Content-Type', rsp.contentType);
       reply.send(rsp.buffer);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(error);
       reply.send(500);
     }
   });
+
+  //------------------------------------------------------------------
+
+  server.get<{
+      Params: IParamsImage;
+      Querystring: QueryParams;
+    }>('/rs/studies/:studyInstanceUid/series/:seriesInstanceUid/instances/:sopInstanceUid/metadata', async (req, reply) => {
+      const { studyInstanceUid, seriesInstanceUid, sopInstanceUid } = req.params;
+      const { query } = req;
+      query.StudyInstanceUID = studyInstanceUid;
+      query.SeriesInstanceUID = seriesInstanceUid;
+      query.SOPInstanceUID = sopInstanceUid;
+  
+      try {
+        const rsp = await fetchMeta(query, studyInstanceUid, seriesInstanceUid);
+        reply.send(rsp);
+      }
+      catch (error) {
+        logger.error(error);
+        reply.send(500);
+      }
+    });
 
   //------------------------------------------------------------------
 
@@ -353,7 +409,8 @@ module.exports = function (server: FastifyInstance, opts: unknown, done: () => v
       const rsp = await doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanceUid });
       reply.header('Content-Type', rsp.contentType);
       reply.send(rsp.buffer);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(error);
       reply.send(500);
     }
@@ -370,7 +427,8 @@ module.exports = function (server: FastifyInstance, opts: unknown, done: () => v
       const rsp = await doWadoUri({ studyInstanceUid: studyUID, seriesInstanceUid: seriesUID, sopInstanceUid: objectUID });
       reply.header('Content-Type', rsp.contentType);
       reply.send(rsp.buffer);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(error);
       reply.send(500);
     }

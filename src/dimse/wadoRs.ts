@@ -62,7 +62,7 @@ async function convertToJpeg(filepath: string, asThumbnail = false) {
       'dcmj2pnm',
       ['+oj', '+Jq', asThumbnail ? '10' : '100', '+Fa', filepath, `${filepath}`]
     );
-    filePath = `${filepath}.0.jpg`
+    filePath = `${filepath}.0.jpg`;
     exists = await fileExists(filePath);
   }
  
@@ -116,7 +116,7 @@ async function addFileToBuffer({ pathname, filename, dataFormat, instanceInfo }:
   // This will throw out if the file doesn't OK (but that's what we want)
   const data = await fs.readFile(filepath);
   // Change the modified & accessed date to now for cache cleanup
-  await fs.utimes(filepath, new Date(), new Date())
+  await fs.utimes(filepath, new Date(), new Date());
   let returnData;
   switch (dataFormat) {
   case 'bulkdata':

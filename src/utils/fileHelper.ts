@@ -17,15 +17,15 @@ export const setWadoInProgress = (inProgress: boolean) => {
 
 const getDirectories = async (source: string) => {
   try {
-    const dir = await promises.readdir(source, { withFileTypes: true })
-    return dir.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name)
+    const dir = await promises.readdir(source, { withFileTypes: true });
+    return dir.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name);
   }
   catch (e) {
     const logger = LoggerSingleton.Instance;
-    logger.warn("Storage Folder doesn't exist: ", source);
+    logger.warn('Storage Folder doesn\'t exist: ', source);
     return [];
   }
-}
+};
 
 export async function fileExists(pathname: string): Promise<boolean> {
   try {

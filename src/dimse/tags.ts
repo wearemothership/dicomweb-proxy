@@ -36,13 +36,13 @@ export const imageLevelTags: Array<string> = ['00080016', '00080018'];
 
 export function tagsForLevel(level: QUERY_LEVEL) {
   switch (level) {
-    case QUERY_LEVEL.STUDY:
-      return studyLevelTags;
-    case QUERY_LEVEL.SERIES:
-      return seriesLevelTags;
-    case QUERY_LEVEL.IMAGE:
-      return imageLevelTags;
-    default:
-      return studyLevelTags;
+  case QUERY_LEVEL.STUDY:
+    return studyLevelTags;
+  case QUERY_LEVEL.SERIES:
+    return seriesLevelTags;
+  case QUERY_LEVEL.IMAGE:
+    return imageLevelTags;
+  default:
+    return studyLevelTags;
   }
 }

@@ -53,15 +53,18 @@ export async function fetchGet(studyUid: string, seriesUid: string, imageUid: st
             if (json.code === 0 || json.code === 2) {
               logger.info(`fetch finished: ${uidPath}`);
               resolve(result);
-            } else {
+            }
+            else {
               logger.info(JSON.parse(result));
             }
-          } catch (error) {
+          }
+          catch (error) {
             reject(error);
           }
         }
       });
-    } catch (error) {
+    }
+    catch (error) {
       reject(error);
     }
   });
