@@ -81,10 +81,10 @@
 
   "secure": true,
   
-  "certificatePath": "./client3-crt.pem",
+  "certificatePath": "./certificate-crt.pem",
 
-  "certificateKeyPath": "./client3-key.pem",
+  "certificateKeyPath": "./key.pem",
 
-  "certificateChainPath": "./ca-crt.pem"
+  "certificateChainPath": "./crt.pem"
 
 }
