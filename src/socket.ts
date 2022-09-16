@@ -8,8 +8,11 @@ import { LoggerSingleton } from './utils/logger';
 import { doWadoRs, DataFormat } from './dimse/wadoRs';
 import { storeData } from './dimse/storeData';
 import socketIOStream from '@wearemothership/socket.io-stream';
+import combineMerge from './utils/combineMerge';
+import deepmerge from 'deepmerge';
 import { readFileSync } from 'fs';
 
+const options = { arrayMerge: combineMerge };
 const websocketUrl = config.get(ConfParams.WEBSOCKET_URL) as string;
 const logger = LoggerSingleton.Instance;
 
@@ -42,13 +45,13 @@ socket.on('connect', () => {
 });
 
 socket.on('qido-request', async (data, callback) => {
-  logger.info('websocket QIDO request received, fetching metadata now...');
   const { level, query }: { level: string; query: Record<string, string> } = data;
   
   if (data) {
     try {
       const lvl = stringToQueryLevel(level);
-      const json = await doFind(lvl, query);
+      logger.info('websocket QIDO request received, fetching metadata now...', level, data);
+      const json = deepmerge.all(await doFind(lvl, query), options);
       logger.info('sending websocket response');
       if (data.uuid) {
         socket.emit(data.uuid, json);
@@ -76,13 +79,13 @@ type WadoRequest = {
 }
 
 socket.on('wado-request', async (data, callback) => {
-  logger.info('websocket WADO request received, fetching metadata now...');
   const { query }: { query: WadoRequest } = data;
   const {
     StudyInstanceUID, SeriesInstanceUID, SOPInstanceUID, dataFormat
   } = query;
 
   if (data) {
+    logger.info('websocket WADO request received, fetching metadata now...');
     try {
       const { contentType, buffer } = await doWadoRs({
         studyInstanceUid: StudyInstanceUID,
@@ -149,12 +152,12 @@ socket.on('stow-request', async (stream: Buffer, info: StowInfo, callback): Prom
 });
 
 socket.on('wadouri-request', async (data, callback) => {
-  logger.info('websocket wadouri request received, fetching metadata now...');
   if (data) {
     const {
       studyUID, seriesUID, objectUID, studyInstanceUid, seriesInstanceUid, sopInstanceUid
     } = data.query;
     try {
+      logger.info('websocket wadouri request received, fetching metadata now...');
       const rsp = await doWadoUri({
         studyInstanceUid: studyInstanceUid ?? studyUID,
         seriesInstanceUid: seriesInstanceUid ?? seriesUID,

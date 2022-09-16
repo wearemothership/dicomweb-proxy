@@ -73,7 +73,7 @@
   "fullMeta": true,
 
   // disabled when empty, otherwise use connection url e.g. ws://localhost:6001
-  "websocketUrl": "wss://dev-pacs.vpop-pro.com:6001",
+  "websocketUrl": "",
 
   // this is the secret your dicomweb-websocket-bride needs to configure too, make sure to keep it secret, and of course change it ,-) hint: use https://hashgenerator.de/
   "websocketToken":
@@ -81,10 +81,10 @@
 
   "secure": true,
   
-  "certificatePath": "./client3-crt.pem",
+  "certificatePath": "./certificate-crt.pem",
 
-  "certificateKeyPath": "./client3-key.pem",
+  "certificateKeyPath": "./key.pem",
 
-  "certificateChainPath": "./ca-crt.pem"
+  "certificateChainPath": "./crt.pem"
 
 }
