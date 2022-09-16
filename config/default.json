@@ -1,16 +1,16 @@
 {
   "source": {
-    "aet": "DIMSE",
+    "aet": "DICOMWEB_PROXY",
     "ip": "127.0.0.1",
-    "port": 9999
+    "port": 8888
   },
 
   // define DICOM peers here
   "peers": [
     {
-      "aet": "ORTHANC",
+      "aet": "CONQUESTSRV1",
       "ip": "127.0.0.1",
-      "port": 4242
+      "port": 5678
     }
   ],
 
@@ -30,7 +30,7 @@
   */
 
   // transfer syntax (e.g. compression of dicom files) used for transmission via wado and proposed to pacs
-  "transferSyntax": "1.2.840.10008.1.2.4.50",
+  "transferSyntax": "1.2.840.10008.1.2.4.70",
 
   // Set the mimeType to match the selected transferSyntax
   "mimeType": "image/dicom+jpeg",
@@ -72,18 +72,18 @@
   "fullMeta": true,
 
   // disabled when empty, otherwise use connection url e.g. ws://localhost:6001
-  "websocketUrl": "wss://dev-pacs.vpop-pro.com:6001",
+  "websocketUrl": "",
 
   // this is the secret your dicomweb-websocket-bride needs to configure too, make sure to keep it secret, and of course change it ,-) hint: use https://hashgenerator.de/
   "websocketToken":
-    "20fff5c3a790f2f662ebc15f44852aa20039f5165507f56bac6319d1f19b44fd47d9a5119a28b402846147a07d1b12006d45ec2316f527fb69bfd529e0a773fd",
+    "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
 
   "secure": true,
   
-  "certificatePath": "./certs/client3-crt.pem",
+  "certificatePath": "./certificate.pem",
 
-  "certificateKeyPath": "./certs/client3-key.pem",
+  "certificateKeyPath": "./key.pem",
 
-  "certificateChainPath": "./certs/ca-crt.pem"
+  "certificateChainPath": "./crt.pem"
 
 }
