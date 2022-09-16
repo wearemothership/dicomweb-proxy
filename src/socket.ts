@@ -8,6 +8,8 @@ import { LoggerSingleton } from './utils/logger';
 import { doWadoRs, DataFormat } from './dimse/wadoRs';
 import { storeData } from './dimse/storeData';
 import socketIOStream from '@wearemothership/socket.io-stream';
+import combineMerge from './utils/combineMerge';
+import deepmerge from 'deepmerge';
 import { readFileSync } from 'fs';
 import combineMerge from './utils/combineMerge';
 import deepmerge from 'deepmerge';
