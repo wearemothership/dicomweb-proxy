@@ -13,7 +13,7 @@ export const setWadoInProgress = (inProgress: boolean) => {
   else {
     wadoInProgress -= 1;
   }
-}
+};
 
 const getDirectories = async (source: string) => {
   try {
@@ -40,7 +40,7 @@ export async function fileExists(pathname: string): Promise<boolean> {
 export async function clearCache() {
   const logger = LoggerSingleton.Instance;
   if (wadoInProgress > 0) {
-    logger.warn("WadoRS In progress...delaying")
+    logger.warn('WadoRS In progress...delaying');
     if (!cacheTimeout) {
       cacheTimeout = setTimeout(() => {
         cacheTimeout = undefined;
