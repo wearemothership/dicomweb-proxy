@@ -44,15 +44,20 @@ socket.on('connect', () => {
   logger.info('websocket connection established');
 });
 
+socket.on('connect_error', (err) => {
+  logger.error('[SocketIO] Error connecting ', err);
+});
+
+
 socket.on('qido-request', async (data, callback) => {
   const { level, query }: { level: string; query: Record<string, string> } = data;
   
   if (data) {
     try {
       const lvl = stringToQueryLevel(level);
-      logger.info('websocket QIDO request received, fetching metadata now...', level, data);
+      logger.info('websocket QIDO request received, fetching metadata now...');
       const json = deepmerge.all(await doFind(lvl, query), options);
-      logger.info('sending websocket response');
+      logger.info('sending websocket response: ', data.uuid ? 'using emit' : 'using callback', !!callback);
       if (data.uuid) {
         socket.emit(data.uuid, json);
       }
@@ -93,33 +98,35 @@ socket.on('wado-request', async (data, callback) => {
         sopInstanceUid: SOPInstanceUID,
         dataFormat
       });
-      logger.info('sending websocket response stream');
+      logger.info('sending websocket response stream: ', data.uuid ? 'using emit' : 'using callback', !!callback, ' size ', buffer.length);
+      const stream = socketIOStream.createStream();
+      const ss = socketIOStream(socket);
+
       if (data.uuid) {
-        const stream = socketIOStream.createStream();
-        socketIOStream(socket).emit(data.uuid, stream, { contentType: contentType });
-  
-        let offset = 0;
-        const chunkSize = 512*1024; // 512kb
-        const writeBuffer = () => {
-          let ok = true;
-          do {
-            const b = Buffer.alloc(chunkSize);
-            buffer.copy(b, 0, offset, offset + chunkSize);
-            ok = stream.write(b);
-            offset += chunkSize;
-          } while (offset < buffer.length && ok);
-          if (offset < buffer.length) {
-            stream.once('drain', writeBuffer);
-          }
-          else {
-            stream.end();
-          }
-        };
-        writeBuffer();
+        ss.emit(data.uuid, stream, { contentType: contentType });
       }
       else {
-        callback?.({ buffer, headers: { contentType: contentType } });
-      }      
+        callback?.({ buffer: stream, headers: { contentType: contentType } });
+      }
+      
+      let offset = 0;
+      const chunkSize = 512*1024; // 512kb
+      const writeBuffer = () => {
+        let ok = true;
+        do {
+          const b = Buffer.alloc(chunkSize);
+          buffer.copy(b, 0, offset, offset + chunkSize);
+          ok = stream.write(b);
+          offset += chunkSize;
+        } while (offset < buffer.length && ok);
+        if (offset < buffer.length) {
+          stream.once('drain', writeBuffer);
+        }
+        else {
+          stream.end();
+        }
+      };
+      writeBuffer();
     }
     catch (e) {
       logger.error('Emitting error', e);

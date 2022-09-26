@@ -91,9 +91,9 @@ async function addFileToBuffer({ pathname, filename, dataFormat, instanceInfo }:
   const logger = LoggerSingleton.Instance;
   const filepath = path.join(pathname, filename);
   const buffArray: Buffer[] = [];
-  let transferSyntax;
+  let transferSyntax: string | undefined;
   // If there is a data format, use default compression
-  if (dataFormat) {
+  if (dataFormat?.match(/pixeldata|bulkdata/)) {
     transferSyntax = '1.2.840.10008.1.2';
   }
 
@@ -110,7 +110,17 @@ async function addFileToBuffer({ pathname, filename, dataFormat, instanceInfo }:
     await compressFile(filepath, pathname, transferSyntax);
   }
   catch (e) {
-    logger.error('Failed to compress', filepath);
+    await new Promise<void>((resolve) => {
+      logger.info('First attempt failed, waiting and trying again');
+      setTimeout(() => {
+        compressFile(filepath, pathname, transferSyntax)
+          .then(() => resolve())
+          .catch(() => {
+            logger.error('Failed to compress', filepath);
+            resolve();
+          });
+      }, 1000);
+    });
   }
 
   // This will throw out if the file doesn't OK (but that's what we want)
@@ -174,111 +184,131 @@ export async function doWadoRs({ studyInstanceUid, seriesInstanceUid, sopInstanc
 
   setWadoInProgress(true);
 
-  // Is the path that we have a directory or a file?
-  let isDir = true;
-  if (await fileExists(pathname)) {
-    const stat = await fs.stat(pathname);
-    isDir = await stat.isDirectory();
-  }
-  let useCache = false;
-  const foundInstances: InstanceInfo[] = [];
-  if (isDir) {
-    // It's a directory, what things do we expect to find in this directory for this search?
-    const json = deepmerge.all(await doFind(QUERY_LEVEL.IMAGE, { StudyInstanceUID: studyInstanceUid, SeriesInstanceUID: seriesInstanceUid ?? '', SOPInstanceUID: sopInstanceUid ?? '' }), { arrayMerge: combineMerge}) as QidoResponse[];
-    const foundPromises = await Promise.all(json.map(async (instance) => {
-      if (instance['00080018']) {
-        const instanceUid = instance['00080018'].Value[0];
-        const seriesUid = instance['0020000E'].Value[0];
-        foundInstances.push({
-          study: studyInstanceUid,
-          series: seriesUid,
-          instance: instanceUid
-        });
-        return fileExists(path.join(studyPath, instanceUid));
-      }
-      return true;
-    }));
-
-    // If all of the files for this search exist, then we're gonna use the cache!
-    useCache = foundPromises.reduce((prev, curr) => prev && curr, true);
-  }
-  else {
-    // If the file exists, use the cache
-    useCache = await fileExists(pathname);
-  }
-
-  if (!useCache) {
-    // We're not using the cache, so go and fetch the files. This will happen even if just one file is missing.
-    // Could this be improved to just get the needed files?
-    logger.info(`fetching ${pathname}`);
-    await waitOrFetchData(studyInstanceUid, seriesInstanceUid ?? '', sopInstanceUid ?? '', queryLevel);
-  }
-
-  // We only need a thumbnail - get it and bail.
-  if (dataFormat === 'thumbnail') {
-    // Just use the first of the foundInstances for this search
-    const filePath = isDir ? path.join(pathname, foundInstances[0].instance as string) : pathname;
-    const buff = await convertToJpeg(filePath, true);
-    if (buff) {
-      return {
-        contentType: 'image/jpeg',
-        buffer: buff
-      };
-    }
-    else {
-      throw new Error('Failed to create thumbnail');
-    }
-  }
-
-  let buffers: (Buffer | undefined)[] = [];
   try {
+    // Is the path that we have a directory or a file?
+    let isDir = true;
+    if (await fileExists(pathname)) {
+      const stat = await fs.stat(pathname);
+      isDir = await stat.isDirectory();
+    }
+    let useCache = false;
+    const foundInstances: InstanceInfo[] = [];
     if (isDir) {
-      // We're in a directory, loop through the files we want and attach them to the return buffer
-      const files = await fs.readdir(pathname);
-      buffers = await Promise.all(files.map((file) => {
-        const instanceInfo = foundInstances.find((i) => i.instance === file);
-        if (instanceInfo) {
-          return addFileToBuffer({ pathname, filename: file, dataFormat, instanceInfo });
+      // It's a directory, what things do we expect to find in this directory for this search?
+      const json = deepmerge.all(await doFind(QUERY_LEVEL.IMAGE, { StudyInstanceUID: studyInstanceUid, SeriesInstanceUID: seriesInstanceUid ?? '', SOPInstanceUID: sopInstanceUid ?? '' }), { arrayMerge: combineMerge}) as QidoResponse[];
+      const foundPromises = await Promise.all(json.map(async (instance) => {
+        if (instance['00080018']) {
+          const instanceUid = instance['00080018'].Value[0];
+          const seriesUid = instance['0020000E'].Value[0];
+          foundInstances.push({
+            study: studyInstanceUid,
+            series: seriesUid,
+            instance: instanceUid
+          });
+          return fileExists(path.join(studyPath, instanceUid));
         }
+        return true;
       }));
+
+      // If all of the files for this search exist, then we're gonna use the cache!
+      useCache = foundPromises.reduce((prev, curr) => prev && curr, true);
     }
     else {
-      // Attach the one file that we need to the return buffer
-      const instanceInfo = { study: studyInstanceUid, series: seriesInstanceUid, instance: sopInstanceUid };
-      buffers = [await addFileToBuffer({ pathname: studyPath, filename, dataFormat, instanceInfo })];
+      // If the file exists, use the cache
+      useCache = await fileExists(pathname);
     }
 
-    // Set up the boundaries and join together all of the file buffers to form
-    // the final buffer to return to the client.
-    const boundary = studyInstanceUid;
-    const buffArray: Buffer[] = [];
-    buffers = buffers.filter((b: Buffer | undefined) => !!b);
-    buffers.forEach((buff) => {
+    if (useCache) {
+      logger.info('Using data cache');
+    }
+    else {
+      logger.info('Cache invalid, fetching files');
+      // We're not using the cache, so go and fetch the files. This will happen even if just one file is missing.
+      // Could this be improved to just get the needed files?
+      logger.info(`fetching ${pathname}`);
+      await waitOrFetchData(studyInstanceUid, seriesInstanceUid ?? '', sopInstanceUid ?? '', queryLevel);
+    }
+
+    // We only need a thumbnail - get it and bail.
+    if (dataFormat === 'thumbnail') {
+      // Just use the first of the foundInstances for this search
+      const filePath = isDir ? path.join(pathname, foundInstances[0].instance as string) : pathname;
+      const buff = await convertToJpeg(filePath, true);
       if (buff) {
-        buffArray.push(Buffer.from(`--${boundary}${term}`));
-        buffArray.push(buff);
+        setWadoInProgress(false);
+        return {
+          contentType: 'image/jpeg',
+          buffer: buff
+        };
       }
-    });
-    buffArray.push(Buffer.from(`--${boundary}--${term}`));
-    setWadoInProgress(false);
-    // We need to set the correct contentType depending on what was asked for.
-    let type = 'application/dicom';
-    if (dataFormat === 'rendered') {
-      type = 'image/jpeg';
-    }
-    else if (dataFormat?.match(/bulkdata|pixeldata/ig)) {
-      type = 'application/octet-stream';
+      else {
+        setWadoInProgress(false);
+        throw new Error('Failed to create thumbnail');
+      }
     }
 
-    const contentType = `multipart/related;type='${type}';boundary=${boundary}`;
-    return Promise.resolve({
-      contentType,
-      buffer: Buffer.concat(buffArray),
-    });
+    // Need to test again after fetch
+    const exists = await fileExists(pathname);
+    if (exists) {
+      const stat = await fs.stat(pathname);
+      isDir = await stat.isDirectory();
 
+      let buffers: (Buffer | undefined)[] = [];
+      try {
+        if (isDir) {
+          // We're in a directory, loop through the files we want and attach them to the return buffer
+          const files = await fs.readdir(pathname);
+          buffers = await Promise.all(files.map((file) => {
+            const instanceInfo = foundInstances.find((i) => i.instance === file);
+            if (instanceInfo) {
+              return addFileToBuffer({ pathname, filename: file, dataFormat, instanceInfo });
+            }
+          }));
+        }
+        else {
+          // Attach the one file that we need to the return buffer
+          const instanceInfo = { study: studyInstanceUid, series: seriesInstanceUid, instance: sopInstanceUid };
+          buffers = [await addFileToBuffer({ pathname: studyPath, filename, dataFormat, instanceInfo })];
+        }
+
+        // Set up the boundaries and join together all of the file buffers to form
+        // the final buffer to return to the client.
+        const boundary = studyInstanceUid;
+        const buffArray: Buffer[] = [];
+        buffers = buffers.filter((b: Buffer | undefined) => !!b);
+        buffers.forEach((buff) => {
+          if (buff) {
+            buffArray.push(Buffer.from(`--${boundary}${term}`));
+            buffArray.push(buff);
+          }
+        });
+        buffArray.push(Buffer.from(`--${boundary}--${term}`));
+        // We need to set the correct contentType depending on what was asked for.
+        let type = 'application/dicom';
+        if (dataFormat === 'rendered') {
+          type = 'image/jpeg';
+        }
+        else if (dataFormat?.match(/bulkdata|pixeldata/ig)) {
+          type = 'application/octet-stream';
+        }
+
+        const contentType = `multipart/related;type='${type}';boundary=${boundary}`;
+        return Promise.resolve({
+          contentType,
+          buffer: Buffer.concat(buffArray),
+        });
+
+      }
+      catch (error) {
+        logger.error(`failed to process ${pathname}`);
+        throw error;
+      }
+    }
+    else {
+      throw new Error('Get files failed');
+    }
   }
-  catch (error) {
-    logger.error(`failed to process ${pathname}`);
-    throw error;
+  finally {
+    setWadoInProgress(false);
   }
 }
