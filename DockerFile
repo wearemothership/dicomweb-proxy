@@ -12,7 +12,7 @@ RUN apk add --no-cache cmake build-base curl \
 	&& cd dcmtk-3.6.7-build \
 	&& cmake ../dcmtk-3.6.7 \
 	&& make -j8 \
-	&& make DESTDIR=../../dcmtk-3.6.7-install install \
+	&& make install \
 	&& cd .. \
 	&& rm -rf dcmtk-3.6.7-build \
 	&& rm -f dcmtk-3.6.7.tar.gz \
