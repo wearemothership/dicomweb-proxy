@@ -11,6 +11,7 @@ import socketIOStream from '@wearemothership/socket.io-stream';
 import combineMerge from './utils/combineMerge';
 import deepmerge from 'deepmerge';
 import { readFileSync } from 'fs';
+import { Stream } from 'stream';
 
 const options = { arrayMerge: combineMerge };
 const websocketUrl = config.get(ConfParams.WEBSOCKET_URL) as string;
@@ -99,38 +100,40 @@ socket.on('wado-request', async (data, callback) => {
         dataFormat
       });
       logger.info('sending websocket response stream: ', data.uuid ? 'using emit' : 'using callback', !!callback, ' size ', buffer.length);
-      const stream = socketIOStream.createStream();
-      const ss = socketIOStream(socket);
-
+      
       if (data.uuid) {
+        const stream = socketIOStream.createStream();
+        const ss = socketIOStream(socket);
         ss.emit(data.uuid, stream, { contentType: contentType });
+
+        let offset = 0;
+        const chunkSize = 512*1024; // 512kb
+        const writeBuffer = () => {
+          let ok = true;
+          do {
+            const b = Buffer.alloc(chunkSize);
+            buffer.copy(b, 0, offset, offset + chunkSize);
+            ok = stream.write(b);
+            offset += chunkSize;
+          } while (offset < buffer.length && ok);
+          if (offset < buffer.length) {
+            stream.once('drain', writeBuffer);
+          }
+          else {
+            stream.end();
+          }
+        };
+        writeBuffer();
       }
       else {
-        callback?.({ buffer: stream, headers: { contentType: contentType } });
+        callback?.({ buffer, headers: { contentType: contentType } });
       }
-      
-      let offset = 0;
-      const chunkSize = 512*1024; // 512kb
-      const writeBuffer = () => {
-        let ok = true;
-        do {
-          const b = Buffer.alloc(chunkSize);
-          buffer.copy(b, 0, offset, offset + chunkSize);
-          ok = stream.write(b);
-          offset += chunkSize;
-        } while (offset < buffer.length && ok);
-        if (offset < buffer.length) {
-          stream.once('drain', writeBuffer);
-        }
-        else {
-          stream.end();
-        }
-      };
-      writeBuffer();
     }
     catch (e) {
       logger.error('Emitting error', e);
-      socket.emit(data.uuid, e);
+      if (data.uuid) {
+        socket.emit(data.uuid, e);
+      }
     }
   }
 });
