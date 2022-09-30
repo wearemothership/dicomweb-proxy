@@ -11,7 +11,6 @@ import socketIOStream from '@wearemothership/socket.io-stream';
 import combineMerge from './utils/combineMerge';
 import deepmerge from 'deepmerge';
 import { readFileSync } from 'fs';
-import { Stream } from 'stream';
 
 const options = { arrayMerge: combineMerge };
 const websocketUrl = config.get(ConfParams.WEBSOCKET_URL) as string;
