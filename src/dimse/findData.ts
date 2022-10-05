@@ -89,7 +89,7 @@ export async function sendCFindRequest(level: QUERY_LEVEL, target: DicomNode, qu
   const offset = query.offset ? parseInt(query.offset, 10) : 0;
 
   // run find scu and return json response
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     // return with empty results if invalid
     if (invalidInput) {
       resolve([]);
@@ -112,18 +112,18 @@ export async function sendCFindRequest(level: QUERY_LEVEL, target: DicomNode, qu
           }
           else {
             logger.error(`c-find failure: ${json.message}`);
-            resolve([]);
+            reject(json.message);
           }
         }
         catch (error) {
           logger.error(error);
           logger.error(result);
-          resolve([]);
+          reject(error);
         }
       }
       else {
         logger.error('invalid result received');
-        resolve([]);
+        reject('invalid result received');
       }
     });
   });
