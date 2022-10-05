@@ -4,6 +4,7 @@ import { LoggerSingleton } from '../utils/logger';
 import { v4 as uuid4 } from 'uuid';
 import fs from 'fs/promises';
 import path from 'path';
+import { fileExists } from '../utils/fileHelper';
 
 type StoreDataResult = {
 	code: number,
@@ -46,13 +47,13 @@ function splitMultipart (buffer: Buffer, boundaryId: string): Buffer[] {
 async function handleStowRequest (multipartData: Buffer, contentType: string) {
   if (contentType) {
     const matches = contentType.match(/boundary=(.*)/i);
-    if (matches) {
+    if (matches?.[1] && matches?.[1].length > 0) {
       const fragments = splitMultipart(multipartData, matches[1]);
-      return fragments;
+      if (fragments.length > 0) {
+        return fragments;
+      }
     }
-    else {
-      throw new Error('Could not split response data');
-    }
+    throw new Error('Could not split response data');
   }
   throw new Error('Invalid response from proxy');
 }
@@ -64,21 +65,14 @@ async function getImagePixelData(fileBuffer: Buffer) {
   return newBuffer;
 }
 
-async function checkExists (path: string) {
-  return fs.stat(path)
-    .then(() => true)
-    .catch(() => false);
-}
-
 export async function storeData(multipartData: Buffer, contentType: string): Promise<StoreDataResult> {
   const logger = LoggerSingleton.Instance;
   const fileList = await handleStowRequest(multipartData, contentType);
   const storagePath = config.get(ConfParams.STORAGE_PATH) as string;
   const folderPath = path.join(process.cwd(), storagePath, 'stow', uuid4());
-  if (!await checkExists(folderPath)) {
+  if (!await fileExists(folderPath)) {
     await fs.mkdir(folderPath, { recursive: true });
   }
-
   await Promise.all(fileList.map(async (fileBuffer) => {
     const file = await getImagePixelData(fileBuffer);
     return fs.writeFile(path.join(folderPath, `${uuid4()}.dcm`), file);
