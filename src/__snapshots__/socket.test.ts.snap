@@ -1,0 +1,187 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Websocket Calls wado tests wado instance (no recompress) 1`] = `
+"--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67870;
+
+DICOM FILE BUFFER
+--1.2.345.67890--
+"
+`;
+
+exports[`Websocket Calls wado tests wado instance (with cache) 1`] = `
+"--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67870;
+
+DICOM FILE BUFFER
+--1.2.345.67890--
+"
+`;
+
+exports[`Websocket Calls wado tests wado instance 1`] = `
+"--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67870;
+
+DICOM FILE BUFFER
+--1.2.345.67890--
+"
+`;
+
+exports[`Websocket Calls wado tests wado instance thumbnails 1`] = `"JPEG FILE BUFFER"`;
+
+exports[`Websocket Calls wado tests wado series instances (no recompress) 1`] = `
+"--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67870;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67871;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67872;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67873;
+
+DICOM FILE BUFFER
+--1.2.345.67890--
+"
+`;
+
+exports[`Websocket Calls wado tests wado series instances (with cache) 1`] = `
+"--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67870;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67871;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67872;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67873;
+
+DICOM FILE BUFFER
+--1.2.345.67890--
+"
+`;
+
+exports[`Websocket Calls wado tests wado series instances 1`] = `
+"--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67870;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67871;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67872;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67873;
+
+DICOM FILE BUFFER
+--1.2.345.67890--
+"
+`;
+
+exports[`Websocket Calls wado tests wado series instances thumbnails 1`] = `"JPEG FILE BUFFER"`;
+
+exports[`Websocket Calls wado tests wado study instances (no recompress) 1`] = `
+"--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67870;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67871;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67872;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67873;
+
+DICOM FILE BUFFER
+--1.2.345.67890--
+"
+`;
+
+exports[`Websocket Calls wado tests wado study instances (with cache) 1`] = `
+"--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67870;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67871;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67872;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67873;
+
+DICOM FILE BUFFER
+--1.2.345.67890--
+"
+`;
+
+exports[`Websocket Calls wado tests wado study instances 1`] = `
+"--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67870;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67871;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67872;
+
+DICOM FILE BUFFER
+--1.2.345.67890
+Content-Type:image/dicom+jpeg;transfer-syntax:1.2.840.10008.1.2.4.50
+Content-Location:/studies/1.2.345.67890/series/1.2.345.67880/instance/1.2.345.67873;
+
+DICOM FILE BUFFER
+--1.2.345.67890--
+"
+`;
+
+exports[`Websocket Calls wado tests wado study instances thumbnails 1`] = `"JPEG FILE BUFFER"`;
