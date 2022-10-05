@@ -50,12 +50,15 @@ export async function fetchGet(studyUid: string, seriesUid: string, imageUid: st
         if (result && result.length > 0) {
           try {
             const json = JSON.parse(result);
-            if (json.code === 0 || json.code === 2) {
+            if (json.code === 0) {
               logger.info(`fetch finished: ${uidPath}`);
               resolve(result);
             }
-            else {
+            else if(json.code === 1) {
               logger.info(JSON.parse(result));
+            }
+            else {
+              reject(json.message);
             }
           }
           catch (error) {
