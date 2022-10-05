@@ -10,7 +10,7 @@ import { startScp, shutdown } from './dimse/store';
 import { clearCache } from './utils/fileHelper';
 import { ConfParams, config } from './utils/config';
 import { LoggerSingleton } from './utils/logger';
-import { socket } from './socket';
+import socket from './socket';
 
 const logger = LoggerSingleton.Instance;
 
@@ -20,7 +20,7 @@ declare module 'fastify' {
   }
 }
 
-const server: FastifyInstance = fastify();
+export const server: FastifyInstance = fastify();
 server.register(fastifyStatic, {
   root: path.join(__dirname, '../public'),
 });
