@@ -129,7 +129,7 @@ let io: Server;
 beforeAll(() => {
   io = new Server(6001);
   io.on('connection', (sock: Socket) => {
-    console.log('SOCKET CONNECTED TO SERVER', sock.handshake.auth);
+    console.info('Socket connected to server', sock.handshake.auth);
   });
 });
 
@@ -521,7 +521,6 @@ describe('Websocket Calls', () => {
     test('STOW File (no content type)', () => new Promise<void>((resolve, reject) => {
       const EOL = '\r\n';
       fs.readFile(path.resolve('./tests/testDICOM.dcm'), (err, fileBuffer) => {
-        console.log(err, fileBuffer);
         if (err) {
           reject(err);
         }
