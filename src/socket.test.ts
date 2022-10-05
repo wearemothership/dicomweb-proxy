@@ -478,6 +478,7 @@ describe('Websocket Calls', () => {
 
   describe('Stow Tests', () => {
     const storeSpy = jest.spyOn(dimseNative, 'storeScu');
+    const filePathRx = new RegExp(/(\\|\/)data(\\|\/)stow(\\|\/)[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}(\\|\/)[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}.dcm/ig);
 
     beforeEach(() => {
       storeSpy.mockImplementation((_options: storeScuOptions, callback: (result: string) => void) => {
@@ -506,7 +507,6 @@ describe('Websocket Calls', () => {
         const buffToSend = Buffer.concat(buffArray);
         io.timeout(5000).emit('stow-request', buffToSend, { contentType: `multipart/related;type='application/dicom';boundary=${boundary}` }, (err: Error, response: [{ success: boolean }]) => {
           try {
-            const filePathRx = new RegExp(/\\data\\stow\\[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}\\[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}.dcm/ig);
             expect(response[0].success).toBeTruthy();
             expect(fsPromises.writeFile).toHaveBeenCalledWith(expect.stringMatching(filePathRx), expect.any(Buffer));
             resolve();
@@ -613,7 +613,6 @@ describe('Websocket Calls', () => {
         const buffToSend = Buffer.concat(buffArray);
         io.timeout(5000).emit('stow-request', buffToSend, { contentType: `multipart/related;type='application/dicom';boundary=${boundary}` }, (err: Error, response: [{ success: boolean }]) => {
           try {
-            const filePathRx = new RegExp(/\\data\\stow\\[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}\\[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}.dcm/ig);
             expect(response[0].success).toBeFalsy();
             expect(fsPromises.writeFile).toHaveBeenCalledWith(expect.stringMatching(filePathRx), expect.any(Buffer));
             resolve();
