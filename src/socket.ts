@@ -38,7 +38,7 @@ if (config.get(ConfParams.SECURE)) {
   ioConfig.ca = readFileSync(config.get(ConfParams.CA), 'utf8').toString();
 }
 
-export const socket = io(websocketUrl, ioConfig);
+const socket = io(websocketUrl, ioConfig);
 
 socket.on('connect', () => {
   logger.info('websocket connection established');
@@ -48,21 +48,29 @@ socket.on('connect_error', (err) => {
   logger.error('[SocketIO] Error connecting ', err);
 });
 
+export type QidoRequest = {
+  level: string,
+  query: {
+    StudyInstanceUID?: string,
+    SeriesInstanceUID?: string,
+    SOPInstanceUID?: string
+  }
+}
 
 socket.on('qido-request', async (data, callback) => {
-  const { level, query }: { level: string; query: Record<string, string> } = data;
-  
+  const { level, query }: QidoRequest = data;
   if (data) {
     try {
       const lvl = stringToQueryLevel(level);
       logger.info('websocket QIDO request received, fetching metadata now...');
-      const json = deepmerge.all(await doFind(lvl, query), options);
+      const data = await doFind(lvl, query);
+      const json = deepmerge.all(data, options);
       logger.info('sending websocket response: ', data.uuid ? 'using emit' : 'using callback', !!callback);
       if (data.uuid) {
         socket.emit(data.uuid, json);
       }
       else {
-        callback?.(json);
+        callback?.({ success: true, data: json });
       }
     }
     catch (e) {
@@ -70,21 +78,23 @@ socket.on('qido-request', async (data, callback) => {
         socket.emit(data.uuid, e);
       }
       else {
-        callback?.(e);
+        callback?.({ success: false, message: (e as Error).message });
       }
     }
   }
 });
 
-type WadoRequest = {
-  StudyInstanceUID: string,
-  SeriesInstanceUID?: string,
-  SOPInstanceUID?: string,
-  dataFormat?: DataFormat
+export type WadoRequest = {
+  query: {
+    StudyInstanceUID: string,
+    SeriesInstanceUID?: string,
+    SOPInstanceUID?: string,
+    dataFormat?: DataFormat
+  }
 }
 
 socket.on('wado-request', async (data, callback) => {
-  const { query }: { query: WadoRequest } = data;
+  const { query }: WadoRequest = data;
   const {
     StudyInstanceUID, SeriesInstanceUID, SOPInstanceUID, dataFormat
   } = query;
@@ -125,13 +135,16 @@ socket.on('wado-request', async (data, callback) => {
         writeBuffer();
       }
       else {
-        callback?.({ buffer, headers: { contentType: contentType } });
+        callback?.({ success: true, buffer, headers: { contentType: contentType } });
       }
     }
     catch (e) {
       logger.error('Emitting error', e);
       if (data.uuid) {
         socket.emit(data.uuid, e);
+      }
+      else {
+        callback?.({ success: false, message: (e as Error).message });
       }
     }
   }
@@ -176,7 +189,7 @@ socket.on('wadouri-request', async (data, callback) => {
         socket.emit(data.uuid, rsp);
       }
       else {
-        callback?.(rsp);
+        callback?.({ success: true, ...rsp });
       }
     }
     catch (error) {
@@ -185,7 +198,7 @@ socket.on('wadouri-request', async (data, callback) => {
         socket.emit(data.uuid, error);
       }
       else {
-        callback?.(error);
+        callback?.({ success: false, message: (error as Error).message });
       }
     }
   }
@@ -194,3 +207,5 @@ socket.on('wadouri-request', async (data, callback) => {
 socket.on('disconnect', () => {
   logger.info('websocket connection disconnected');
 });
+
+export default socket;
