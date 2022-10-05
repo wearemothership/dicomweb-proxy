@@ -53,6 +53,9 @@ jest.mock('./utils/logger', () => ({
 
 jest.mock('fs', () => ({
   ...jest.requireActual('fs') as Record<string, unknown>,
+  readFile: jest.fn((_path: string, callback: (err: Error | undefined, fileBuffer: Buffer) => void) => {
+    callback(undefined, Buffer.from('DICOM UPLOAD BUFFER'));
+  }),
   promises: {
     stat: jest.fn()
   }
@@ -518,6 +521,7 @@ describe('Websocket Calls', () => {
     test('STOW File (no content type)', () => new Promise<void>((resolve, reject) => {
       const EOL = '\r\n';
       fs.readFile(path.resolve('./tests/testDICOM.dcm'), (err, fileBuffer) => {
+        console.log(err, fileBuffer);
         if (err) {
           reject(err);
         }
