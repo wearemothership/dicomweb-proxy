@@ -30,7 +30,8 @@ export async function sendCEchoRequest(target: DicomNode) {
         try {
           logger.info(JSON.parse(result));
           resolve(true);
-        } catch (error) {
+        }
+        catch (error) {
           logger.error(result);
           reject(error);
         }

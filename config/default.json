@@ -1,5 +1,4 @@
 {
-  // our SCP (only used if useCget is false
   "source": {
     "aet": "DICOMWEB_PROXY",
     "ip": "127.0.0.1",
@@ -31,13 +30,13 @@
   */
 
   // transfer syntax (e.g. compression of dicom files) used for transmission via wado and proposed to pacs
-  "transferSyntax": "1.2.840.10008.1.2.4.50",
+  "transferSyntax": "1.2.840.10008.1.2.4.70",
 
   // Set the mimeType to match the selected transferSyntax
   "mimeType": "image/dicom+jpeg",
 
   // only used for JPEG process 1,2,4
-  "lossyQuality": 60,
+  "lossyQuality": 80,
 
   // log directory
   "logDir": "./logs",
@@ -81,7 +80,7 @@
 
   "secure": true,
   
-  "certificatePath": "./certificate-crt.pem",
+  "certificatePath": "./certificate.pem",
 
   "certificateKeyPath": "./key.pem",
 
