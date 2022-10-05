@@ -54,7 +54,7 @@ export async function fetchGet(studyUid: string, seriesUid: string, imageUid: st
               logger.info(`fetch finished: ${uidPath}`);
               resolve(result);
             }
-            else if(json.code === 1) {
+            else if (json.code === 1) {
               logger.info(JSON.parse(result));
             }
             else {
