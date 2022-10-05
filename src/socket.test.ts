@@ -4,7 +4,7 @@ import socket, { QidoRequest, WadoRequest } from './socket';
 // @ts-ignore
 import { Server, Socket } from 'socket.io';
 import type {
-  findScuOptions, KeyValue, getScuOptions, recompressOptions, storeScuOptions, moveScuOptions
+  findScuOptions, KeyValue, getScuOptions, recompressOptions, storeScuOptions
 } from 'dicom-dimse-native';
 import { studyData, seriesData, instancesData, PacsData } from '../tests/testData';
 import fs from 'fs';
@@ -236,11 +236,11 @@ describe('Websocket Calls', () => {
   });
 
   describe.each(wadoCalls)('wado tests', (call, args, isDir) => {
-    const getSpy = jest.spyOn(dimseNative, 'moveScu');
+    const getSpy = jest.spyOn(dimseNative, 'getScu');
     const recompressSpy = jest.spyOn(dimseNative, 'recompress');
 
     beforeEach(() => {
-      getSpy.mockImplementation((_options: moveScuOptions, callback: (result: string) => void) => {
+      getSpy.mockImplementation((_options: getScuOptions, callback: (result: string) => void) => {
         callback(JSON.stringify({ code: 0 }));
       });
       recompressSpy.mockImplementation((_options: recompressOptions, callback: (result: string) => void) => {
@@ -432,7 +432,7 @@ describe('Websocket Calls', () => {
       const errSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
       const infoSpy = jest.spyOn(console, 'info');
       getSpy.mockReset();
-      getSpy.mockImplementation((_options: moveScuOptions, callback: (result: string) => void) => {
+      getSpy.mockImplementation((_options: getScuOptions, callback: (result: string) => void) => {
         callback(JSON.stringify({ code: 2, message: 'Test Error' }));
       });
 
